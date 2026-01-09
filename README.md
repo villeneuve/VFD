@@ -8,7 +8,32 @@ The swimming pool pump motor is rated 230Vac 50Hz 5.5A 1.2kW.
 This VFD was bought on [AliExpress](https://fr.aliexpress.com/item/1005007804372091.html?pdp_npi=4%40dis%21EUR%21%E2%82%AC%2083%2C68%21%E2%82%AC%2054%2C39%21%21%2196.00%2162.40%21%402103835e17588183866768574e4166%2112000042258239052%21sh%21FR%210%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007523647771.1005007804372091&gatewayAdapt=glo2fra).  
 The documentation can be found on [CNWeiken website](http://www.cnweiken.cn/upload/files/20230819/6382804255758362504914814.pdf?spm=a2g0o.detail.1000023.3.911b2tC62tC61r&file=6382804255758362504914814.pdf).  A copy is on this repository + the Modbus documentation.
 
+For the moment I have tested the VFD on the motor.  
+It works as expected but I have returned it to the lab to test the communication with a computer.  
+The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected. The next step is to connect it to a microcontroller (most probably a raspberry pi pico) using microPython.  
+So far I've written some Python scripts that are useful to dialog with the VFD. They are all here in the SoftwareForLinux folder.  
+You may have to install the pymodbus Python library 
+```
+sudo apt install python3-pymodbus #Debian or derivative distributions
+```
+Some scripts are just plain text utilities. Example:  
 
+ <img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.32.31.png">
+
+The DialogVFD.py is more friendly, it's interactive with the user.  
+You may have to install the pymodbus Python library 
+```
+sudo apt install python3-dialog #Debian or derivative distributions
+```
+This is how it looks.  
 
  <img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.28.57.png/">
  
+It can monitor the VFD with a 2 seconds refresh rate 
+
+<img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.30.17.png">
+
+These scripts are pure Python and should be portable from Linux to Windows but I haven't tried.  
+
+Ok I work on MicroPython now on...  
+
