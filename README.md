@@ -40,11 +40,25 @@ Ok I go to work on MicroPython now on...  + Hardware
 ## Changes, tricks, setting I did:   
 
 Parameters changes:  
-I set P1-00=4 to get single-phase motor mode 2 = high-speed. It was set to 3   
+I set **P1-00=4** to get single-phase motor mode 2 = high-speed. It was set to 3   
 According manufacturer:   
 &emsp;&emsp;&emsp;&emsp; p1-00=3 single-phase motor mode 1 Output around 155V, low-speed mode    
 &emsp;&emsp;&emsp;&emsp; p1-00=4 single-phase motor mode 2 Output around 215V, high-speed mode    
 &emsp;&emsp;&emsp;&emsp; This complies with manufacturer [youtube video](https://www.youtube.com/watch?v=KAJoE-C64vI)   
-ffff
+
+To be able to communicate via ModBus with the Python ModBus library, I changed:    
+**PD-05 from 30 a 31** (30 = standard ModBus.  31 = non standard)  
+
+And finally these settings:   
+**P0-02 = 2** (command source = communication)   
+**P0-03 = 9** (Frequency set by communication)   
+**P7-01 = 1** M/F key Switchover between operation panel control and remote command control.   
+**P0-27 = 4** Binding operation panel command source to panel potentiometer   
+So I have start/stop + Frequency setting via modbus in normal operation: remote (loc/rem LED blinking)  
+If I press M/F key then it goes to local (loc/rem LED off) then I have start/stop + F (knob) from operation panel  
+Press M/F again to return to remote mode  
+fff
+
+
 
 
