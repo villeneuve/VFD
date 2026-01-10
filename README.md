@@ -35,5 +35,15 @@ It can monitor the VFD with a 2 seconds refresh rate
 
 These scripts are pure Python and should be portable from Linux to Windows but I haven't tried.  
 
-Ok I work on MicroPython now on...  
+Ok I go to work on MicroPython now on...  + Hardware
+
+## Changes, tricks, setting I did:   
+
+Parameters changes:  
+I set P1-00=4 to get single-phase motor mode 2 = high-speed. It was set to 3   
+According manufacturer:   
+&emsp;&emsp;&emsp;&emsp; p1-00=3 single-phase motor mode 1 Output around 155V, low-speed mode    
+&emsp;&emsp;&emsp;&emsp; p1-00=4 single-phase motor mode 2 Output around 215V, high-speed mode
+fff
+
 
