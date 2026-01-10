@@ -57,7 +57,17 @@ And finally these settings:
 So I have start/stop + Frequency setting via modbus in normal operation: remote (loc/rem LED blinking)  
 If I press M/F key then it goes to local (loc/rem LED off) then I have start/stop + F (knob) from operation panel  
 Press M/F again to return to remote mode  
-fff
+
+RS485 link:  
+U used a USB to RS485 adaptor and also a USB to serial + serial (TTL) to RS485 adaptor on the host computer to connect to the VFD.  
+I had many Usb2RS485 disconnect because I had connected A to A, B to B, and GND to GND  
+When I disconnect the GND no more disconnection (it make sense because it's a differential bus. Searching the web also confirmed that. Many advices suggest not to connect GND).  
+I also put a 120 ohms resistors at each end as recommended + a shielded cable.  
+The connection is very robust now, no error, even at 115200 bauds.  
+
+...
+
+
 
 
 
