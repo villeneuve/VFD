@@ -47,7 +47,7 @@ According manufacturer:
 &emsp;&emsp;&emsp;&emsp; This complies with manufacturer [youtube video](https://www.youtube.com/watch?v=KAJoE-C64vI)   
 
 To be able to communicate via ModBus with the Python ModBus library, I changed:    
-**PD-05 from 30 a 31** (30 = standard ModBus.  31 = non standard)  
+**PD-05 from 30 to 31** (change from non standard to standard ModBus.)  
 
 And finally these settings:   
 **P0-02 = 2** (command source = communication)   
