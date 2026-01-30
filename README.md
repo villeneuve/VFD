@@ -10,35 +10,11 @@ The documentation can be found on [CNWeiken website](http://www.cnweiken.cn/uplo
 
 For the moment I have tested the VFD driving the motor.  
 It works as expected but I have returned it to the lab to test the communication with a computer.  
-The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected. The next step is to connect it to a microcontroller (most probably a raspberry pi pico) using microPython.  
+The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected.    
+I have now connected it to a raspberry pi pico using microPython. It works  as expected.    
 
-For Linux check folder SoftLinux.
-
-So far I've written some Python scripts that are useful to dialog with the VFD. They are all here, in the SoftwareForLinux folder.  
-You may have to install the pymodbus Python library 
-```
-sudo apt install python3-pymodbus #Debian or derivative distributions
-```
-Some scripts are just plain text utilities. Example:  
-
- <img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.32.31.png">
-
-The DialogVFD.py is more friendly, it's interactive with the user.  
-You may have to install the Python Dialog library 
-```
-sudo apt install python3-dialog #Debian or derivative distributions
-```
-This is how it looks.  
-
- <img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.28.57.png/">
- 
-It can monitor the VFD with a 2 seconds refresh rate 
-
-<img src="https://github.com/villeneuve/VFD/blob/main/ScreenShots/Screenshot%202026-01-09%2010.30.17.png">
-
-These scripts are pure Python and should be portable from Linux to Windows but I haven't tried.  
-
-Ok I go to work on MicroPython now on...  + Hardware
+For Linux check folder SoftLinux.   
+For MicroPython check folder MicroPython.   
 
 ## Changes, tricks, setting I did:   
 
@@ -67,6 +43,9 @@ I had many adaptor disconnections because I had connected A to A, B to B, and GN
 When I disconnect the GND no more disconnection (it make sense because it's a differential bus. Searching the web also confirmed that. Many advices suggest not to connect GND).  
 I also put a 120 ohms resistors at each end as recommended + a shielded cable.  
 The connection is very robust now, no error, even at 115200 bauds.  
+
+To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected pico UART1. 
+
 
 ...
 
