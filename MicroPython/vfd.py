@@ -409,7 +409,7 @@ if SetFreq(10000):
     print('To read any registers, type : vfd.ReadAnyRegister(address, count) default to 0x7000, 20 if not given')
     print('To write 1 register, type : vfd.Write1Word(address, value) default to 0x2000, 7 if not given (fault reset)')
     print('To monitor the main parameters, type : vfd.Monitoring(refresh, count, extended)')
-    print('         defaults: refresh=2s cycles=2 (0=forever Ctrl-C to stop extended=False')
+    print('         defaults: refresh=2s cycles=2 (0=forever Ctrl-C to stop) extended=False')
     print('         extended lists 66 parameters not extended the 15 mains')
     print('To have interactive menu type, vfd.Menu()')
 else:
