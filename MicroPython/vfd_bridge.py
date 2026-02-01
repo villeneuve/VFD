@@ -438,7 +438,7 @@ def bridge_loop():
     while True:
         try:
             if pc_uart.any():
-                led = Pin("LED", Pin.OUT) # led on when pc is talking
+                led.on() # led on when pc is talking
                 with bus_lock:
                     data_pc = pc_uart.read()
                     if data_pc:
