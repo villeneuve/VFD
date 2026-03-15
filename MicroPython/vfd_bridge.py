@@ -461,4 +461,4 @@ def bridge_loop():
 # Lancement du thread si l'initialisation précédente a réussi
 if 'host' in globals():
     _thread.start_new_thread(bridge_loop, ())
-
+print()  # just to get back to REPL prompt
