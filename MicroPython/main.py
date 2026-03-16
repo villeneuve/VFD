@@ -1,4 +1,4 @@
-from machine import Pin, Timer
+from machine import Pin
 import time
 import sys
 import asyncio
@@ -51,13 +51,11 @@ uselcd.lcd.message("VFD "+vfd_status)
 import web_server
 print('Web server imported')
 
-# -------- DEBUG --------
-tempsDebut = time.ticks_ms()
-tmax = 3000 #ms
-
 async def main_principal():
-    # --- Debug
-    global tempsDebut
+    
+    # -------- DEBUG --------
+    tempsDebut = time.ticks_ms()
+    tmax = 3000 #ms
     jj = 0
     
     print("--- Programme Principal Lancé ---")
@@ -73,16 +71,9 @@ async def main_principal():
             uselcd.lcd.display_top("Se connecter a :")
             uselcd.lcd.display_bottom(IP)
             
-        # --- Gestion Boutons LCD ---
-        # if get_buttons() != 0 and current_state == STATE_IDLE:
-            # print('lcd button pressed: call menu on lcd')
-            # asyncio.create_task(menu_driver())
-        
-        b = uselcd.get_buttons()
-        if b != 0 and uselcd.current_state == uselcd.STATE_IDLE :
+        if uselcd.get_buttons() and uselcd.s.state == uselcd.s.STATE_IDLE :
             print('lcd button pressed: call menu on lcd')
-            print('Main: current_state=', uselcd.current_state)
-            #asyncio.create_task(uselcd.menu_driver(b))
+            print('Main: uselcd.s.state=', uselcd.s.state)
             asyncio.create_task(uselcd.menu_driver())          
             
         # Ici il faudra lire les capteurs (et etat vfd?)

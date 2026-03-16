@@ -2,6 +2,7 @@ import machine
 import time
 from lcd_Adafruit_16x2_RGB_i2c import MCP23017, Adafruit_RGB_LCD
 import asyncio
+from vfd_bridge import SetFreq
 
 # --- CONFIGURATION I2C ---
 i2c = machine.I2C(1, sda=machine.Pin(2), scl=machine.Pin(3), freq=400000)
@@ -19,31 +20,26 @@ BTN_DOWN   = 1 << 2 # Bit 2
 BTN_UP     = 1 << 3 # Bit 3
 BTN_LEFT   = 1 << 4 # Bit 4
 
-# --- VARIABLES GLOBALES ---
-# Fréquence (variable stockée)
-freq_hz = 50 
-# RTC Système pour Date/Heure
 rtc = machine.RTC()
 
-# États du programme
-STATE_IDLE      = 0
-STATE_MENU      = 1
-STATE_EDIT_DATE = 2
-STATE_EDIT_TIME = 3
-STATE_EDIT_FREQ = 4
-STATE_MOTEUR    = 5
-STATE_CONTACTEUR = 6
+# the state machine to keep lcd / menu states
+class STATE:
+    def __init__(self, state):
+        self.state = state
+        self.STATE_IDLE      = 0
+        self.STATE_MENU      = 1
+        self.STATE_EDIT_DATE = 2
+        self.STATE_EDIT_TIME = 3
+        self.STATE_EDIT_FREQ = 4
+        self.STATE_MOTEUR    = 5
+        self.STATE_CONTACTEUR = 6
 
-current_state = STATE_IDLE
-#menu_index = 0 # 0=Date, 1=Heure, 2=Freq
-
-# --- FONCTIONS UTILITAIRES ---
+s = STATE(0)
 
 def get_buttons():
     return lcd.all_buttons
 
 async def wait_release():
-    """Attend que tous les boutons soient relâchés (anti-rebond simple)"""
     while lcd.all_buttons != 0:
         await asyncio.sleep(0.01)
     await asyncio.sleep(0.05) # debounce delay
@@ -53,7 +49,9 @@ def zpad(val):
     return "{:02d}".format(val)
   
 async def menu_driver():
-    global current_state, freq_hz
+    
+    # Fréquence (variable stockée)
+    freq_hz = 50 
 
     # long scroll message
     msg_usage = "Up/Down=change param Select=modifier ce param"
@@ -76,17 +74,18 @@ async def menu_driver():
     lcd.display_top(menus[menu_index])
     lcd.display_bottom(msg_usage)
 
-    # Enter here from main => STATE_IDLE
-    current_state = STATE_MENU 
+    # Enter here from main : STATE_IDLE we change to STATE_MENU 
+    s.state = s.STATE_MENU 
     
     # we must enter the loop with no button press
+    # we wait release because button was pressed (in main)
     await wait_release()
     btns = 0
     
-    while current_state : # we'll leave the loop when back to STATE_IDLE ( =0)
+    while s.state : # we'll leave the loop when back to s.STATE_IDLE ( =0)
          
-        # btns first read is done in main and given as parameter to 
-        # this function. Then btns is read again at this loop end.
+        # btns first read was done in main. 
+        # btns is read again at this loop end.
         if btns:
             timeLastActivity = time.ticks_ms()
             await wait_release()
@@ -96,7 +95,7 @@ async def menu_driver():
         ii +=1  # DEBUG
         
         # --- ETAT MENU ---
-        if current_state == STATE_MENU :
+        if s.state == s.STATE_MENU :
             
             if btns & BTN_UP:
                 menu_index = (menu_index + 1) % len(menus)
@@ -108,7 +107,7 @@ async def menu_driver():
                 
             elif btns & BTN_SELECT:
                 if menu_index == 0:
-                    current_state = STATE_EDIT_DATE
+                    s.state = s.STATE_EDIT_DATE
                     lcd.clear()
                     lcd.display_bottom("Up/Dn=val R/L=mv")
                     lcd.blink_cursor(True)
@@ -123,7 +122,7 @@ async def menu_driver():
                     lcd.display_top("Date=" + date_str)
                     
                 elif menu_index == 1:
-                    current_state = STATE_EDIT_TIME
+                    s.state = s.STATE_EDIT_TIME
                     # Récupérer l'heure actuelle (YYYY, M, D, w, HH, MM, SS, ms)
                     now = rtc.datetime()
                     # On travaille sur [HH, MM, SS] -> indices 4, 5, 6
@@ -136,21 +135,21 @@ async def menu_driver():
                     lcd.display_top("Heure = " + time_str)
                     
                 elif menu_index == 2:
-                    current_state = STATE_EDIT_FREQ
+                    s.state = s.STATE_EDIT_FREQ
                     lcd.display_bottom("Up/Down=+-1Hz")
                     lcd.display_top("Frequence={}Hz".format(freq_hz))
                     
                 elif menu_index == 3:
-                    current_state = STATE_MOTEUR
+                    s.state = s.STATE_MOTEUR
                     lcd.display_bottom("Pas en service")
                     lcd.display_top("Travaux en cours")
                     
                 elif menu_index == 4:
-                    current_state = STATE_CONTACTEUR
+                    s.state = s.STATE_CONTACTEUR
                     lcd.display_bottom("Pas en service")
                     lcd.display_top("Travaux en cours")
                     
-        elif current_state == STATE_EDIT_DATE :
+        elif s.state == s.STATE_EDIT_DATE :
 
             # Mapping curseur physique (Date= occupe 5 chars)
             # Format JJ:MM:AAAA -> curseur sur J1(5), J2(6), M1(8), M2(9), A3(13), A4(14)
@@ -167,7 +166,7 @@ async def menu_driver():
                     # rtc.datetime((YYYY, M, D, w, HH, MM, SS, ms))
                     new_dt = (new_year, vals[1], vals[0], now[3], now[4], now[5], now[6], 0)
                     rtc.datetime(new_dt)
-                    current_state = STATE_MENU
+                    s.state = s.STATE_MENU
                     lcd.blink_cursor(False)
                     menu_index = 1
                     lcd.display_top(menus[menu_index])
@@ -211,7 +210,7 @@ async def menu_driver():
                     date_str = "{}:{}:{}".format(zpad(vals[0]), zpad(vals[1]), year_prefix + vals[2])
                     lcd.display_top("Date=" + date_str)
             
-        elif current_state == STATE_EDIT_TIME :
+        elif s.state == s.STATE_EDIT_TIME :
 
             # Positionnement curseur LCD (format HH:MM:SS)
             # Mapping curseur logique (0-5) -> curseur physique (8,9, 11,12, 14,15)
@@ -224,7 +223,7 @@ async def menu_driver():
                     # rtc.datetime((YYYY, M, D, w, HH, MM, SS, ms))
                     new_dt = (now[0], now[1], now[2], now[3], vals[0], vals[1], vals[2], 0)
                     rtc.datetime(new_dt)
-                    current_state = STATE_MENU
+                    s.state = s.STATE_MENU
                     lcd.blink_cursor(False)
                     menu_index = 0
                     lcd.display_top(menus[menu_index])
@@ -274,14 +273,15 @@ async def menu_driver():
                     time_str = "{}:{}:{}".format(zpad(vals[0]), zpad(vals[1]), zpad(vals[2]))
                     lcd.display_top("Heure = " + time_str)
             
-        elif current_state == STATE_EDIT_FREQ :
+        elif s.state == s.STATE_EDIT_FREQ :
             
             if btns & BTN_SELECT:
-                current_state = STATE_MENU
+                s.state = s.STATE_MENU
                 menu_index = 0
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
                 # HERE we must set the frequency
+                SetFreq(freq_hz * 200)
                 
             elif btns & BTN_UP:
                 if freq_hz < 50: freq_hz += 1
@@ -291,16 +291,16 @@ async def menu_driver():
                 if freq_hz > 20: freq_hz -= 1
                 lcd.display_top("Frequence={}Hz".format(freq_hz))
         
-        elif current_state == STATE_MOTEUR :
+        elif s.state == s.STATE_MOTEUR :
             if btns :
-                current_state = STATE_MENU
+                s.state = s.STATE_MENU
                 menu_index = 0
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
         
-        elif current_state == STATE_CONTACTEUR :
+        elif s.state == s.STATE_CONTACTEUR :
             if btns :
-                current_state = STATE_MENU
+                s.state = s.STATE_MENU
                 menu_index = 0
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
@@ -312,7 +312,7 @@ async def menu_driver():
         
         # Timeout
         if time.ticks_diff(time.ticks_ms(), timeLastActivity ) > tmaxActivity :
-            current_state = STATE_IDLE  # sortie de la boucle
+            s.state = s.STATE_IDLE  # sortie de la boucle
             lcd.set_color([0,0,0])
             # Display date and time before leaving
             cc = rtc.datetime()
@@ -325,5 +325,5 @@ async def menu_driver():
         
         await asyncio.sleep(0.01)
 
-    print('EXIT menu_driver. current_state =', current_state)
+    print('EXIT menu_driver. s.state =', s.state)
         
