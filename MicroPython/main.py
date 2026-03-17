@@ -33,11 +33,12 @@ if maintenance:
 # 5s elapsed and no maintenace mode requested the program continues
 print('\nStarting. Step 2..')
 
-from vfd_bridge import *
+from vfd_Obj import VFD, host
 print('Starting step 3..')
 time.sleep(1)
 
-if SetFreq(10000):  # Return True if VFD is online (and set F to 50Hz)
+v = VFD(host)
+if v.SetFreq(10000):  # Return True if VFD is online (and set F to 50Hz)
     vfd_status = "On line"
 else:
     vfd_status = "Off line"  
@@ -71,10 +72,12 @@ async def main_principal():
             uselcd.lcd.display_top("Se connecter a :")
             uselcd.lcd.display_bottom(IP)
             
-        if uselcd.get_buttons() and uselcd.s.state == uselcd.s.STATE_IDLE :
+        # We test first if IDLE because Python will not test button
+        # if idle (evaluate left to right). So we avoid more traffic on i2c    
+        if uselcd.s.state == uselcd.s.STATE_IDLE and uselcd.get_buttons() :
             print('lcd button pressed: call menu on lcd')
             print('Main: uselcd.s.state=', uselcd.s.state)
-            asyncio.create_task(uselcd.menu_driver())          
+            asyncio.create_task(uselcd.menu_driver(v))          
             
         # Ici il faudra lire les capteurs (et etat vfd?)
         

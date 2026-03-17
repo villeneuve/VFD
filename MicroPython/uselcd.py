@@ -2,7 +2,7 @@ import machine
 import time
 from lcd_Adafruit_16x2_RGB_i2c import MCP23017, Adafruit_RGB_LCD
 import asyncio
-from vfd_bridge import SetFreq
+#from vfd_bridge import SetFreq
 
 # --- CONFIGURATION I2C ---
 i2c = machine.I2C(1, sda=machine.Pin(2), scl=machine.Pin(3), freq=400000)
@@ -48,7 +48,7 @@ def zpad(val):
     """Zero padding for display (ex: 5 -> '05')"""
     return "{:02d}".format(val)
   
-async def menu_driver():
+async def menu_driver(vfd):
     
     # Fréquence (variable stockée)
     freq_hz = 50 
@@ -141,8 +141,16 @@ async def menu_driver():
                     
                 elif menu_index == 3:
                     s.state = s.STATE_MOTEUR
-                    lcd.display_bottom("Pas en service")
-                    lcd.display_top("Travaux en cours")
+                    status = vfd.MotorStatus()
+                    if status == 1:
+                        lcd.display_top("Moteur :")
+                        lcd.display_bottom("Tourne")
+                    elif status == 3:
+                        lcd.display_top("Moteur :")
+                        lcd.display_bottom("A l'arret")
+                    else :
+                        lcd.display_bottom("Status inconnu")
+                        lcd.display_top("VFD offline?")
                     
                 elif menu_index == 4:
                     s.state = s.STATE_CONTACTEUR
@@ -281,7 +289,7 @@ async def menu_driver():
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
                 # HERE we must set the frequency
-                SetFreq(freq_hz * 200)
+                vfd.SetFreq(freq_hz * 200)
                 
             elif btns & BTN_UP:
                 if freq_hz < 50: freq_hz += 1
