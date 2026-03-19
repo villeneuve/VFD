@@ -38,11 +38,21 @@ print('Starting step 3..')
 time.sleep(1)
 
 v = VFD(host)
-if v.SetFreq(10000):  # Return True if VFD is online (and set F to 50Hz)
+# if v.SetFreq(10000):  # Return True if VFD is online (and set F to 50Hz)
+    # vfd_status = "On line"
+# else:
+    # vfd_status = "Off line"  
+    
+if v.isonline :
     vfd_status = "On line"
-else:
-    vfd_status = "Off line"  
+    if v.SetFreq(10000):
+        print("Frequency set to 50Hz! Change it if you want.")
+    else :
+        print("Not possible VFD online and cannot set frequency :-(")
+else :
+    vfd_status = "Off line"
 print('VFD',vfd_status)
+
 
 import uselcd
 print('Starting step 4..')

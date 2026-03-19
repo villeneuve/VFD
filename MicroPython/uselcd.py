@@ -289,7 +289,8 @@ async def menu_driver(vfd):
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
                 # HERE we must set the frequency
-                vfd.SetFreq(freq_hz * 200)
+                #vfd.SetFreq(freq_hz * 200)  # use method
+                vfd.frequency_setpoint = freq_hz * 200 # use property
                 
             elif btns & BTN_UP:
                 if freq_hz < 50: freq_hz += 1

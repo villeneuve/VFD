@@ -119,7 +119,8 @@ class VFD:
                     signed=False)
                 ListToPrint = []
                 for i in range(0, count):
-                    ListToPrint.append(str(addr+i) + ' ' + str(f"0x{addr+i:04X}") + ' = ' + str(register_value[i]))
+                    # ListToPrint.append(str(addr+i) + ' ' + str(f"0x{addr+i:04X}") + ' = ' + str(register_value[i]))
+                    ListToPrint.append(str(register_value[i]))  # TBC but here I only need the value
                 TextToPrint = '\n'.join(ListToPrint)
                 #print(TextToPrint)
                 return(TextToPrint)
@@ -138,16 +139,26 @@ class VFD:
                 #print('Result :', operation_status)
                 return(operation_status)
             except Exception as e: print(repr(e))
-
-
-# v = VFD(host)
-
-# if v.SetFreq(10000):
-    # # Writing frequency setpoint is a way to test if we can talk with the vfd
-    # # And also to avoid to start the motor with setpoint=0 because this will freeze the pico!!!
-    # print('\nVFD is online :-) I\'ve set frequency setpoint at 10000 = 100.00% = 50Hz. Change it if you like')
-# else:
-    # print('Something went wrong.. Exit')
+        
+    @property
+    def isonline(self):
+        if self.MotorStatus() != None :
+            return(True)
+        else :
+            return(False)
+            
+    @property
+    def frequency_measured(self):
+        return self.ReadAnyRegister(addr=0x1001, count=1)
+    
+    @property
+    def frequency_setpoint(self):
+        return self.ReadAnyRegister(addr=0x1000, count=1)
+    
+    @frequency_setpoint.setter
+    def frequency_setpoint(self, value):
+        return self.SetFreq(value)    # return True or False
+                                    # but useless because assignment isn't an expression
 
 # 1. Configuration de l'UART0 pour le PC Linux (GP0=TX, GP1=RX)
 pc_uart = UART(0, baudrate=9600, stop=2, tx=Pin(0), rx=Pin(1), timeout=10)
@@ -184,4 +195,3 @@ def bridge_loop():
 if 'host' in globals():
     _thread.start_new_thread(bridge_loop, ())
 print()  # just to get back to REPL prompt
-#print()
