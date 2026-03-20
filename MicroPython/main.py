@@ -6,7 +6,7 @@ import asyncio
 
 button = Pin(6, Pin.IN, Pin.PULL_UP)
 
-SERVER_TIME_OUT = 60000 #ms
+SERVER_TIME_OUT = 120000 #ms
 
 # We wait 5s to give time to all electronics to energize and init 
 # if button is pressed during this time we exit to REPL this is "maintenance mode"
@@ -29,23 +29,21 @@ while True:
         break
 if maintenance:
     sys.exit()
-
 # 5s elapsed and no maintenace mode requested the program continues
-print('\nStarting. Step 2..')
 
+print('\nStarting. Step 2..')
 from vfd_Obj import VFD, host
+
 print('Starting step 3..')
 time.sleep(1)
-
 v = VFD(host)
-# if v.SetFreq(10000):  # Return True if VFD is online (and set F to 50Hz)
-    # vfd_status = "On line"
-# else:
-    # vfd_status = "Off line"  
     
 if v.isonline :
     vfd_status = "On line"
     if v.SetFreq(10000):
+        # At energization VFD frequency setpoint is 0 (On VFD itself)
+        # If we give a start command with frequency setpoint = 0
+        # the system freezes. So we MUST give a nonzero setpoint.
         print("Frequency set to 50Hz! Change it if you want.")
     else :
         print("Not possible VFD online and cannot set frequency :-(")
@@ -66,7 +64,7 @@ async def main_principal():
     
     # -------- DEBUG --------
     tempsDebut = time.ticks_ms()
-    tmax = 3000 #ms
+    tmax = 6000 #ms
     jj = 0
     
     print("--- Programme Principal Lancé ---")
@@ -77,7 +75,7 @@ async def main_principal():
             print('Button pressed: Starting web server')
             time.sleep(0.2) # Debounce delay
             time_start_server = time.ticks_ms()
-            IP = web_server.demarrer_serveur()
+            IP = web_server.demarrer_serveur(v)
             uselcd.lcd.clear()
             uselcd.lcd.display_top("Se connecter a :")
             uselcd.lcd.display_bottom(IP)
@@ -89,7 +87,9 @@ async def main_principal():
             print('Main: uselcd.s.state=', uselcd.s.state)
             asyncio.create_task(uselcd.menu_driver(v))          
             
-        # Ici il faudra lire les capteurs (et etat vfd?)
+        # TODO Ici il faudra lire les capteurs (et etat vfd?)
+        
+        # TODO after a time to define we must clear lcd
         
         # --- Arret serveur sur timeout ---
         if web_server.serveur_actif:

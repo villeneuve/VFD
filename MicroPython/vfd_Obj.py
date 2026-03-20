@@ -47,7 +47,6 @@ class VFD:
                     register_address=hreg_address,
                     register_value=new_hreg_val,
                     signed=False)
-                #print('Result :', operation_status)
                 return(operation_status)
             except Exception as e: print(repr(e))
 
@@ -61,7 +60,6 @@ class VFD:
                     register_address=hreg_address,
                     register_value=new_hreg_val,
                     signed=False)
-                #print('Result :', operation_status)
                 return(operation_status)
             except Exception as e: print(repr(e))
 
@@ -81,7 +79,6 @@ class VFD:
                             register_address=hreg_address,
                             register_value=new_hreg_val,
                             signed=False)
-                        #print('Result :', operation_status)
                         r = operation_status
                     except Exception as e: print(repr(e))
             else:
@@ -103,7 +100,6 @@ class VFD:
                 TextToPrint = 'VFD fault = ' + str(f"0x{register_value[0]:04X}")
                 TextToPrint = TextToPrint + '\nCommunication fault = ' 
                 TextToPrint = TextToPrint + str(f"0x{register_value[1]:04X}")
-                #print(TextToPrint)
                 return(TextToPrint)
             except Exception as e: print(repr(e))
 
@@ -122,7 +118,6 @@ class VFD:
                     # ListToPrint.append(str(addr+i) + ' ' + str(f"0x{addr+i:04X}") + ' = ' + str(register_value[i]))
                     ListToPrint.append(str(register_value[i]))  # TBC but here I only need the value
                 TextToPrint = '\n'.join(ListToPrint)
-                #print(TextToPrint)
                 return(TextToPrint)
             except Exception as e: print(repr(e))
 
@@ -136,7 +131,6 @@ class VFD:
                     register_address=hreg_address,
                     register_value=new_hreg_val,
                     signed=False)
-                #print('Result :', operation_status)
                 return(operation_status)
             except Exception as e: print(repr(e))
         

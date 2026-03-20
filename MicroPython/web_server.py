@@ -9,16 +9,30 @@ import uasyncio as asyncio
 ap = None
 serveur_tache = None  # Stockera la tâche du serveur
 serveur_actif = False
+vfd = None
 
-# ==========================================
-# FONCTIONS FACTICES (A REMPLACER)
-# ==========================================
 def GetStatus():
-    return (True, False, False, 25.12, 33.25)
+    global vfd
+    ol = vfd.isonline
+    if ol:
+        fm = int(vfd.frequency_measured) / 100  # here we get floats
+        fs = int(vfd.frequency_setpoint) / 200  # ok with html page
+    else:
+        fm = '?'  # TODO here we get str but html page displays '0.00'
+        fs = '?'  # to modify to display '?' (unknown)
+    return (ol, False, False, fm, fs)
 
-def start(): print("ACTION: Start")
-def stop(): print("ACTION: Stop")
-def SetF(v): print(f"ACTION: SetF {v}")
+def start(): 
+    global vfd
+    print("ACTION: Start. Result :" , vfd.StartMotor())
+
+def stop(): 
+    global vfd
+    print("ACTION: Stop. Result :" , vfd.StopMotor())
+
+def SetF(v): 
+    global vfd
+    print(f"ACTION: SetF {v}. Result :", vfd.SetFreq(int(v * 200)))
 
 # ==========================================
 # PAGE WEB HTML / JAVASCRIPT
@@ -34,7 +48,7 @@ PAGE_HTML = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pico Piscine</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        body { font-family: Arial, sans-serif; margin:200 20px; line-height: 1.6; }
         .titre { font-weight: bold; color: black; }
         .bouton { padding: 10px 15px; margin: 5px; cursor: pointer; }
         hr { margin: 20px 0; }
@@ -59,8 +73,8 @@ PAGE_HTML = """<!DOCTYPE html>
     <hr>
     
     <span class="titre">REGLAGE CONSIGNE FREQUENCE:</span><br>
-    <input type="range" id="sliderF" min="0" max="50" step="0.01" value="0" oninput="document.getElementById('valF').innerText = this.value">
-    <span id="valF">0</span> Hz
+    <input type="range" id="sliderF" min="20" max="50" step="0.01" value="20" oninput="document.getElementById('valF').innerText = this.value">
+    <span id="valF">20</span> Hz
     <button class="bouton" onclick="fetch('/action?cmd=setf&val=' + document.getElementById('sliderF').value)">Appliquer</button>
 
     <hr>
@@ -214,8 +228,10 @@ async def serveur_loop():
 # COMMANDES UTILISATEUR
 # ==========================================
 
-def demarrer_serveur():
-    global ap, serveur_tache, serveur_actif
+def demarrer_serveur(v):
+    global ap, serveur_tache, serveur_actif, vfd
+    
+    vfd = v
     
     if serveur_actif:
         print("Le serveur tourne déjà.")

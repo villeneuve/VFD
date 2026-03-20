@@ -2,7 +2,6 @@ import machine
 import time
 from lcd_Adafruit_16x2_RGB_i2c import MCP23017, Adafruit_RGB_LCD
 import asyncio
-#from vfd_bridge import SetFreq
 
 # --- CONFIGURATION I2C ---
 i2c = machine.I2C(1, sda=machine.Pin(2), scl=machine.Pin(3), freq=400000)
@@ -50,8 +49,11 @@ def zpad(val):
   
 async def menu_driver(vfd):
     
-    # Fréquence (variable stockée)
-    freq_hz = 50 
+    # Reading frequency set point. Set to 50 if vfd offline
+    if vfd.isonline:
+        freq_hz = int(int(vfd.frequency_setpoint) / 200)
+    else:
+        freq_hz = 50
 
     # long scroll message
     msg_usage = "Up/Down=change param Select=modifier ce param"
@@ -77,15 +79,17 @@ async def menu_driver(vfd):
     # Enter here from main : STATE_IDLE we change to STATE_MENU 
     s.state = s.STATE_MENU 
     
-    # we must enter the loop with no button press
+    # we must enter the loop with no button pressed
     # we wait release because button was pressed (in main)
     await wait_release()
     btns = 0
     
     while s.state : # we'll leave the loop when back to s.STATE_IDLE ( =0)
          
-        # btns first read was done in main. 
-        # btns is read again at this loop end.
+        # TODO put the get_buttons() here shouldn't change anything
+        # and code is more readable
+        
+        # btns is read at this loop end.
         if btns:
             timeLastActivity = time.ticks_ms()
             await wait_release()
