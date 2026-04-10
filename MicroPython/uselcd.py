@@ -61,15 +61,17 @@ async def menu_driver(vfd):
     # Menus
     menus = ["Reglage date", "Reglage heure", "Reglage frequence", "Moteur", "Contacteur"]
     menu_index = 0
-    
+        
     # ------- DEBUG ---
     tempsDebutMenuDriver = time.ticks_ms()
-    tmaxMenuDriver = 2500 #ms
+    # tmaxMenuDriver = 2500 #ms
+    tmaxMenuDriver = 5000 #ms
     print('Init menu_driver')
     ii = 0
     
     timeLastActivity = time.ticks_ms()
-    tmaxActivity = 5000 #ms
+    # tmaxActivity = 5000 #ms
+    tmaxActivity = 15000 #ms
     
     lcd.clear()
     lcd.set_color([100, 100, 100]) # White
@@ -147,20 +149,23 @@ async def menu_driver(vfd):
                     s.state = s.STATE_MOTEUR
                     status = vfd.MotorStatus()
                     if status == 1:
-                        lcd.display_top("Moteur :")
-                        lcd.display_bottom("Tourne")
+                        lcd.display_top("Moteur tourne")
+                        lcd.display_bottom("Select=OFF autre touche=quitter")
                     elif status == 3:
-                        lcd.display_top("Moteur :")
-                        lcd.display_bottom("A l'arret")
+                        lcd.display_top("Moteur arret")
+                        lcd.display_bottom("Select=ON autre touche=quitter")
                     else :
-                        lcd.display_bottom("Status inconnu")
-                        lcd.display_top("VFD offline?")
+                        lcd.display_top("Etat inconnu")
+                        lcd.display_bottom("VFD offline?")
                     
                 elif menu_index == 4:
                     s.state = s.STATE_CONTACTEUR
-                    lcd.display_bottom("Pas en service")
-                    lcd.display_top("Travaux en cours")
-                    
+                    if vfd.contactor_status:
+                        lcd.display_top("Contacteur ON")
+                    else:
+                        lcd.display_top("Contacteur OFF")
+                    lcd.display_bottom("Select=ON/OFF autre touche=quitter")
+
         elif s.state == s.STATE_EDIT_DATE :
 
             # Mapping curseur physique (Date= occupe 5 chars)
@@ -305,6 +310,17 @@ async def menu_driver(vfd):
                 lcd.display_top("Frequence={}Hz".format(freq_hz))
         
         elif s.state == s.STATE_MOTEUR :
+            if btns & BTN_SELECT:
+                # status = vfd.MotorStatus() TBC no need to read again! variable status should be ok 
+                if status == 1:
+                    vfd.StopMotor()
+                    print("Action STOP--------------")  # DEBUG
+                elif status == 3:
+                    vfd.StartMotor()
+                    print("Action START-------------")  # DEBUG
+                else:
+                    print("NO ACTION----------------")  # DEBUG
+                    pass # unknown status VFD maybe offline we quit
             if btns :
                 s.state = s.STATE_MENU
                 menu_index = 0
@@ -312,6 +328,11 @@ async def menu_driver(vfd):
                 lcd.display_bottom(msg_usage)
         
         elif s.state == s.STATE_CONTACTEUR :
+            if btns & BTN_SELECT:
+                if vfd.contactor_status:
+                    vfd.OpenContactor()
+                else:
+                    vfd.CloseContactor()
             if btns :
                 s.state = s.STATE_MENU
                 menu_index = 0

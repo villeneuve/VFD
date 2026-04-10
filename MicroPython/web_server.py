@@ -3,7 +3,7 @@ import socket
 import machine
 import time
 import json
-import uasyncio as asyncio
+import asyncio
 
 # --- VARIABLES GLOBALES DE CONTRÔLE ---
 ap = None
@@ -11,26 +11,37 @@ serveur_tache = None  # Stockera la tâche du serveur
 serveur_actif = False
 vfd = None
 
+
 def GetStatus():
     global vfd
+    cs = vfd.contactor_status
     ol = vfd.isonline
+    ms = vfd.MotorStatus()
+    if ms is not None:
+        if ms == 1: m_s = 'ON'
+        if ms == 3: m_s = 'OFF'
+    else: m_s = '?'
     if ol:
         fm = int(vfd.frequency_measured) / 100  # here we get floats
         fs = int(vfd.frequency_setpoint) / 200  # ok with html page
     else:
         fm = '?'  # TODO here we get str but html page displays '0.00'
         fs = '?'  # to modify to display '?' (unknown)
-    return (ol, False, False, fm, fs)
+    ds = vfd.disj_status
+    return (ol, m_s, ds, fm, fs)
 
-def start(): 
+
+def start():
     global vfd
-    print("ACTION: Start. Result :" , vfd.StartMotor())
+    print("ACTION: Start. Result :", vfd.StartMotor())
 
-def stop(): 
+
+def stop():
     global vfd
-    print("ACTION: Stop. Result :" , vfd.StopMotor())
+    print("ACTION: Stop. Result :", vfd.StopMotor())
 
-def SetF(v): 
+
+def SetF(v):
     global vfd
     print(f"ACTION: SetF {v}. Result :", vfd.SetFreq(int(v * 200)))
 
@@ -41,6 +52,8 @@ def SetF(v):
 # 1. Rafraichir les données en arrière-plan (AJAX) toutes les 5s
 # 2. Générer les listes déroulantes de dates sans surcharger la RAM du Pico
 # 3. Envoyer les commandes sans recharger la page
+
+
 PAGE_HTML = """<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -146,10 +159,10 @@ PAGE_HTML = """<!DOCTYPE html>
 </html>
 """
 
-
 # ==========================================
 # LOGIQUE DU SERVEUR (ASYNCHRONE)
 # ==========================================
+
 
 async def gerer_client(reader, writer):
     """Gère une connexion client individuelle sans bloquer le reste."""
@@ -157,17 +170,21 @@ async def gerer_client(reader, writer):
         request_line = await reader.readline()
         if not request_line:
             return
-        
+
         # On vide le reste du buffer de lecture
         while await reader.readline() != b"\r\n":
             pass
 
-        url = request_line.decode().split()[1] if len(request_line.split()) > 1 else "/"
+        url = request_line.decode().split()[1] \
+            if len(request_line.split()) > 1 else "/"
 
         if url == "/":
-            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + PAGE_HTML
+            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + \
+                PAGE_HTML
         elif url == "/status":
-            response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + json.dumps(GetStatus())
+            response = \
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + \
+                json.dumps(GetStatus())
         elif url.startswith("/action?"):
             # Analyse des commandes
             params = url.split('?')[1]
@@ -191,11 +208,13 @@ async def gerer_client(reader, writer):
                 min_ = int(param_dict.get('min', 0))
                 sec = int(param_dict.get('s', 0))
                 # Mise à jour de l'heure système (RTC) du Pico W
-                # Format: (year, month, day, weekday, hours, minutes, seconds, subseconds)
+                # Format:
+                # (year, month, day, weekday, hours, minutes, seconds, subsec)
                 rtc = machine.RTC()
                 rtc.datetime((a, m, j, 0, h, min_, sec, 0))
-                print(f"ACTION: RTC mis à jour: {j:02d}/{m:02d}/{a} {h:02d}:{min_:02d}:{sec:02d}")
-            
+                print("ACTION: RTC mis  jour:",
+                    f"{j:02d}/{m:02d}/{a} {h:02d}:{min_:02d}:{sec:02d}")
+
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"
         else:
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
@@ -207,16 +226,18 @@ async def gerer_client(reader, writer):
     finally:
         await writer.wait_closed()
 
+
 async def serveur_loop():
     """La boucle principale du serveur qui tourne en tâche de fond."""
     global serveur_actif
     print("Serveur Web démarré sur le port 80.")
     server = await asyncio.start_server(gerer_client, "0.0.0.0", 80)
     serveur_actif = True
-    
+
     try:
         while serveur_actif:
-            await asyncio.sleep(1) # Laisse du temps processeur aux autres tâches
+            # Laisse du temps processeur aux autres tâches
+            await asyncio.sleep(1)
     except asyncio.CancelledError:
         pass
     finally:
@@ -228,11 +249,12 @@ async def serveur_loop():
 # COMMANDES UTILISATEUR
 # ==========================================
 
+
 def demarrer_serveur(v):
     global ap, serveur_tache, serveur_actif, vfd
-    
+
     vfd = v
-    
+
     if serveur_actif:
         print("Le serveur tourne déjà.")
         return ap.ifconfig()[0]
@@ -241,18 +263,21 @@ def demarrer_serveur(v):
     ap = network.WLAN(network.AP_IF)
     ap.config(ssid='PicoPiscine', password='laquinta')
     ap.active(True)
-    while not ap.active(): time.sleep(0.1)
+    while not ap.active():
+        time.sleep(0.1)
     print(f"WiFi AP 'PicoPiscine' prêt. IP: {ap.ifconfig()[0]}")
 
     # 2. Lancement de la tâche de fond
-    # Note: On utilise get_event_loop() pour injecter la tâche dans la boucle globale
+    # Note: On utilise get_event_loop() pour injecter la tâche
+    # dans la boucle globale
     loop = asyncio.get_event_loop()
     serveur_tache = loop.create_task(serveur_loop())
     return ap.ifconfig()[0]
 
+
 def stop_serveur():
     global ap, serveur_tache, serveur_actif
-    
+
     if not serveur_actif:
         print("Le serveur n'est pas lancé.")
         return
@@ -260,10 +285,8 @@ def stop_serveur():
     serveur_actif = False
     if serveur_tache:
         serveur_tache.cancel()
-    
+
     if ap:
         ap.active(False)
-    
+
     print("Demande d'arrêt envoyée.")
-
-
