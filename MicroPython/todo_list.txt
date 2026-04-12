@@ -38,4 +38,6 @@ Idee: Pour pouvoir dialoguer depuis CarbetBox utilser les messages du REPL
 comme entre VmcBox et ChaudiereBox pour avoir les insfos, notemment les
 mesures.
 
+Start wifi from LCD menu?
+
 Mettre a jour avec git, GitHub et NewBox, avec les modifs de Montreal  

@@ -106,9 +106,11 @@ async def main_principal():
             t_start_sensors_reading = time.ticks_ms()
             asyncio.create_task(read_sensors.get_sensors_value())
         # We read sensors values if available
-        if read_sensors.flag_ready_to_read:
-            read_sensors.flag_ready_to_read = False
-            print(read_sensors.value_list)
+        if read_sensors.sensors.flag_ready_to_read:
+            read_sensors.sensors.flag_ready_to_read = False
+            print(read_sensors.sensors.sensor_name)
+            print(read_sensors.sensors.sensor_value)
+            print(time.localtime(read_sensors.sensors.last_update))
             # Here we must send these values to who want them
 
         #  We clear lcd when nothing happen after T_LCD_MAX

@@ -8,28 +8,32 @@ ow = onewire.OneWire(Pin(9))
 ow.scan()
 ow.reset()
 ds = ds18x20.DS18X20(ow)
-roms = ds.scan()
 
-value_list = ["?", "?"]  # unknown at init, will be populated when read
-flag_ready_to_read = False  # will True after sensor reading and reset by
-                            # reading the list (from main)
+class SENSORS_GROUP:
+    def __init__(self):
+        self.sensor_id          = []     #  exemple: rom id 
+        self.sensor_name        = []     #  exemple: motor temperature
+        self.sensor_value       = []     #  exemple: "25.75"
+        self.last_update        = 0      #  last measure timestamp
+        self.flag_ready_to_read = False  #  True after sensor reading
+                                         #  reset in main after getting value
 
-# function asyncio to be used with a main asyncio as well (returns temperature)
-# async def get_sensors_value():
-    # ds.convert_temp()
-    # await asyncio.sleep_ms(750)
-    # print(tuple(type(str(ds.read_temp(rom))) for rom in roms))
+sensors = SENSORS_GROUP()
+
+sensors.sensor_id = ds.scan()
+for i, id in enumerate(sensors.sensor_id):
+    sensors.sensor_value.append("?")
+    sensors.sensor_name.append("Temperature test " + str(i))
+
 
 # function asyncio to be used with a main asyncio as well (returns temperature)
 async def get_sensors_value():
-    global flag_ready_to_read  # lists are mutable objects not booleans
-    ds.convert_temp()          # so only the boolean needs global declaration
+    ds.convert_temp()
     await asyncio.sleep_ms(750)
-    i = 0
-    for rom in roms:
-        value_list[i] = str(ds.read_temp(rom))
-        i += 1
-    flag_ready_to_read = True
+    for i, id in enumerate(sensors.sensor_id):
+        sensors.sensor_value[i] = str(ds.read_temp(id))
+    sensors.flag_ready_to_read = True
+    sensors.last_update = time.time()
 
 
 # Non asyncio function (returns rom + temperature)
