@@ -1,16 +1,19 @@
 # VFD (Variable Frequency Drive) on swimming pool water pump.  
 This project is to use a VFD to drive the swimming pool water pump motor.  
-The VFD is from CNWeiken the model is WK600D-0022-M1T : 1 phase 2.2kW.  
-The swimming pool pump motor is rated 230Vac 50Hz 5.5A 1.2kW.  
+The VFD is from CNWeiken the model is **WK600D-0022-M1T : 1 phase 2.2kW**.  
+The swimming pool pump motor is rated **230Vac 50Hz 5.5A 1.2kW**.  
 ## This is an ongoing project. This repository will grow with project progress  
-## Last update 30 January 2026  
+## Last update 29 April 2026  (many changes since last publishing)
 
 This VFD was bought on [AliExpress](https://fr.aliexpress.com/item/1005007804372091.html?pdp_npi=4%40dis%21EUR%21%E2%82%AC%2083%2C68%21%E2%82%AC%2054%2C39%21%21%2196.00%2162.40%21%402103835e17588183866768574e4166%2112000042258239052%21sh%21FR%210%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007523647771.1005007804372091&gatewayAdapt=glo2fra).  
 The documentation can be found on [CNWeiken website](http://www.cnweiken.cn/upload/files/20230819/6382804255758362504914814.pdf?spm=a2g0o.detail.1000023.3.911b2tC62tC61r&file=6382804255758362504914814.pdf).     
 A copy of this doc + the Modbus documentation is on this repository in the Documentation folder.     
 
-For the moment I have tested the VFD driving the motor.  
-It works as expected but I have returned it to the lab to test the communication with a computer.  
+The VFD is now installed in its cabinet and is running. It drives the swimming pool water pump. It's working as expected.  
+
+The control system (the Raspberry pi Pico) is not yet installed on site. It is still under development. 
+The software is almost ready. Check the MicroPython folder to see it.
+
 The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected.    
 I have now connected it to a raspberry pi pico using microPython. It works  as expected.    
 
@@ -48,10 +51,13 @@ The connection is very robust now, no error, even at 115200 bauds.
 To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected pico UART1. 
 
 
-...
+
+**Here are photos of the VFD in its cabinet.**
 
 
+<img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretInt.png">    
 
 
+<img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretExt.png">
 
 

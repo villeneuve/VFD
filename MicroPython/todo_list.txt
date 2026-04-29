@@ -40,4 +40,7 @@ mesures.
 
 Start wifi from LCD menu?
 
-Mettre a jour avec git, GitHub et NewBox, avec les modifs de Montreal  
+Mettre a jour avec git, GitHub et NewBox, avec les modifs de Montreal  FAIT
+
+sur cbpixel il y a une version modifiée de Dialog.py / monitoring qui continue
+a rouler plutot que de sortir sur erreur. Voir si gqrder upstream.. ou..
