@@ -1,6 +1,7 @@
 from umodbus.serial import Serial as ModbusRTUMaster
-from machine import Pin, UART
+from machine import Pin, UART, PWM
 from time import sleep, sleep_ms
+from read_sensors import sensors
 import _thread
 
 bus_lock = _thread.allocate_lock()  # global lock
@@ -23,11 +24,46 @@ slave_addr = 1
 
 contactor   = Pin(7, Pin.OUT)
 disjoncteur = Pin(8, Pin.IN, Pin.PULL_UP)
+fan = PWM(Pin(10), freq=5000, duty_u16=0)
 
 class VFD:
+    
     def __init__(self, host):
         self.host = host
-        # print('Done')
+        self.vfd_temp = "?"  # updated when GetVfdData() is called
+        self.vfd_data = [
+        # Here are the text and addresses of the 11 vfd monitoring 
+        # parameters we are collecting. 
+        # In order to communicate them on request.
+        # this is a list of 11 text strings.
+        # ["U0-00", "Running frequency (Hz)", "0.01 Hz", "0x7000", ""],
+        # ["U0-01", "Set frequency (Hz)", "0.01 Hz", "0x7001", ""],
+        # ["U0-02", "Bus voltage", "0.1 V", "0x7002", ""],
+        # ["U0-03", "Output voltage", "1 V", "0x7003", ""],
+        # ["U0-04", "Output current", "0.01 A", "0x7004", ""],
+        # ["U0-05", "Output power", "0.1 kW", "0x7005", ""],
+        # ["U0-06", "Output torque", "0.1%", "0x7006", ""]
+        
+        # ["U0-14", "Load speed", "1", "0x700E", ""],
+        
+        # ["U0-19", "Feedback speed", "0.01 Hz", "0x7013", ""],
+        
+        # ["U0-25", "Accumulative power-on time", "1 Min", "0x7019", ""],
+        # ["U0-26", "Accumulative running time", "0.1 Min", "0x701A", ""]
+        #
+        # in 12th position (i=11)  vfd_temp is added
+        # in 13th position (i=12)  motor_status is added
+        #
+        "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?"
+        ]
+        self.all_data = [
+        # first parameter is vfd_status, followed by the 13 parameters of
+        # vfd_data, followed by: contactor_status, disjoncteur (circuit beaker
+        # in french) state, fan_speed, temperatures sensors measure + errors
+        # counter: 3x3=9 parameters + total count, pico voltage VSYS.
+        ]
+        self.fan_temp_thres = [22, 26, 28, 30, 33, 35]  # temperature threshold
+                                                        # for fan speed control
 
     def MotorStatus(self):
         with bus_lock:
@@ -148,10 +184,73 @@ class VFD:
 
     def CloseContactor(self):
         contactor.on()
+        # fan.duty_u16(32768)  # set fan speed 50%
         
     def OpenContactor(self):
         contactor.off()
-
+        # fan.duty_u16(0)  # stop fan
+        
+    def FanControl(self):
+        # we have 6 fan speed : 0 ~ 5 = i in loop hereunder
+        # fan duty = 13000 * i = 0 ~ 65000
+        # we select the speed according tempertures in fan_temp_thres
+        # to avoid frequent fan speed change we don't call this too often
+        if self.isonline:
+            try:
+                for i, val in enumerate(self.fan_temp_thres):
+                    if int(self.vfd_temp) < val:
+                        break
+                fan.duty_u16(i * 13000)
+            except Exception as e:            # debug 
+                print(repr(e))
+        else:
+            fan.duty_u16(0)
+        print("Fan control. VFD Temp:", self.vfd_temp, \
+        "Fan speed:", fan.duty_u16())
+        
+    def GetVfdData(self):
+        if self.isonline:
+            try:
+                s = self.ReadAnyRegister(addr=0x7000, count=7)  
+                # s = string we convert to list (reverse of
+                # what is done in ReadAnyRegister!!!)
+                self.vfd_data = s.split('\n')
+                s = self.ReadAnyRegister(addr=0x700E, count=1) 
+                self.vfd_data.append(s)
+                s = self.ReadAnyRegister(addr=0x7013, count=1) 
+                self.vfd_data.append(s)
+                s = self.ReadAnyRegister(addr=0x7019, count=2) 
+                ss = s.split('\n')
+                self.vfd_data.append(ss[0])
+                self.vfd_data.append(ss[1])
+                # Now let's update vfd_temp
+                self.vfd_temp = self.ReadAnyRegister(addr=0xF707, count=1)
+                # and add it to vfd_data
+                self.vfd_data.append(self.vfd_temp)
+                # now let's add motor status
+                self.vfd_data.append(str(self.MotorStatus()))
+            except Exception as e:            # debug 
+                print(repr(e))
+        else:
+            self.vfd_data = [
+            "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?"]
+            
+    def GetAllData(self):
+        if self.isonline:
+            self.all_data = ["online"]
+        else:
+            self.all_data = ["offline"]
+        self.GetVfdData()
+        self.all_data.extend(self.vfd_data)
+        self.all_data.append(str(self.contactor_status))
+        self.all_data.append(str(disjoncteur.value()))  # 0:fault 1:ok
+        self.all_data.append(str(fan.duty_u16()))
+        for i, id in enumerate(sensors.sensor_id):
+            self.all_data.append(sensors.sensor_value[i])  # already a string
+            self.all_data.append(str(sensors.sensor_crc_err[i]))
+            self.all_data.append(str(sensors.sensor_other_err[i]))
+        self.all_data.append(str(sensors.count))
+        
     @property
     def isonline(self):
         # if self.MotorStatus() != None:   corrigé par pycodestyle PEP-8 TBC
@@ -179,7 +278,7 @@ class VFD:
 
     @property
     def disj_status(self):
-        return disjoncteur.value()  # contact open on fault => input = 1
+        return not disjoncteur.value()  # contact open on fault => input = 0
 
 # 1. Configuration de l'UART0 pour le PC Linux (GP0=TX, GP1=RX)
 pc_uart = UART(0, baudrate=9600, stop=2, tx=Pin(0), rx=Pin(1), timeout=10)
