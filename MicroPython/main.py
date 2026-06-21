@@ -3,24 +3,21 @@ import time
 import sys
 import asyncio
 import uselect
+from CetTime import cettime
 
 button = Pin(6, Pin.IN, Pin.PULL_UP)
 
-SERVER_TIME_OUT = 1000 * 60 * 5  # ms
-# PERIODIC_SENSOR_READING = 5 * 60 * 1000  # ms every 5 minutes
-PERIODIC_SENSOR_READING = 20000 #  Tests
-PERIODIC_DATA_READING = 30000 # must be > PERIODIC_SENSOR_READING
-PERIODIC_FAN_CONTROL = 50000 # Tests
-# T_LCD_MAX = 5 * 60 * 1000  # 5 minutes
-T_LCD_MAX = 10 * 1000  # 10 sec during tests
+SERVER_TIME_OUT = 1000 * 60 * 5  #  ms 5 minutes
+PERIODIC_SENSOR_READING = 30000 #  30 seconds
+PERIODIC_DATA_READING = 40000 #  must be > PERIODIC_SENSOR_READING
+PERIODIC_FAN_CONTROL = 50000 #  50 seconds
+T_LCD_MAX = 10 * 1000  #  10 sec 
 
 # We wait 5s to give time to all electronics to energize and init.
 # if button is pressed during this time we exit to REPL,
 # this is "maintenance mode"
 
-# DEBUG
-# count = 5
-count = 1
+count = 5
 maintenance = False
 print('Starting. Step 1..')
 print('To exit to REPL press the button within 5s.. ', end='')
@@ -66,7 +63,7 @@ async def main_1():
 
     # -------- DEBUG --------
     tempsDebut = time.ticks_ms()
-    tmax = 6000  # ms
+    tmax = 50000  # ms
     jj = 0
     
     t_start_lcd = time.ticks_ms()
@@ -97,7 +94,7 @@ async def main_1():
         # Sensors reading (async, 750ms needed for DS18B20 temperature sensors)
         if time.ticks_diff(time.ticks_ms(), t_start_sensors_reading) > \
                     PERIODIC_SENSOR_READING:
-            print("SENSORS READING.................")
+            print("Reading sensors..")
             t_start_sensors_reading = time.ticks_ms()
             asyncio.create_task(read_sensors.get_sensors_value())
         # We read sensors values if available
@@ -107,10 +104,11 @@ async def main_1():
                 print(read_sensors.sensors.sensor_name[i], "=", \
                 read_sensors.sensors.sensor_value[i], \
                 "crc err:", read_sensors.sensors.sensor_crc_err[i], \
-                "other err:", read_sensors.sensors.sensor_other_err[i] )
+                "other err:", read_sensors.sensors.sensor_other_err[i], \
+                end=' | ')
+            print(" Total access to each sensor:", read_sensors.sensors.count)
             print("Last update time:", \
             time.localtime(read_sensors.sensors.last_update))
-            print("Total access to each sensor:", read_sensors.sensors.count)
             
         if time.ticks_diff(time.ticks_ms(), t_start_data_reading) > \
                     PERIODIC_DATA_READING:
@@ -171,13 +169,10 @@ async def main_2():
             if char == '\n' or char == '\r':
                 command = buffer.strip()
                 cmd_lst = command.split()
-                print('cmd_lst[0] : ', cmd_lst[0])
-                if cmd_lst[0] in acceptable:
-                    print('Acceptable')
+                print("Command received:", command)
+                # 1st test check cmd_lst is not empty (when received only \n)
+                if cmd_lst and cmd_lst[0] in acceptable:
                     if len(cmd_lst) == 1:
-                        print(f"\n[LEN 1 Command received : {command}]")
-                        print(f"len de cmd_lst : {len(cmd_lst)}")
-                        print(cmd_lst, cmd_lst[0])
                         if cmd_lst[0] == "ContactorOn":
                             print("Contactor ON order received")
                             v.CloseContactor()
@@ -193,9 +188,6 @@ async def main_2():
                         else:
                             print("Invalid command. Parameter(s) missing?")
                     elif len(cmd_lst) == 2:
-                        print(f"\n[LEN 2 Command received : {command}]")
-                        print(f"len de cmd_lst : {len(cmd_lst)}")
-                        print(cmd_lst, cmd_lst[0])
                         if cmd_lst[0] == "SetFrequency":
                             print("Set Frequency command received."
                                 f" To set to : {cmd_lst[1]}")
@@ -206,9 +198,12 @@ async def main_2():
                         if cmd_lst[0] == "SetDateTime":
                             print("Set date and time command received."
                                 f" To set to : {cmd_lst[1]}")
+                            try:
+                                cettime(int(cmd_lst[1]))
+                            except Exception as e:
+                                print('Error when trying to set time')
+                                print(repr(e))
                     elif len(cmd_lst) == 3:
-                        print(f"\n[LEN 3 Command received : {command}]")
-                        print(f"len de cmd_lst : {len(cmd_lst)}")
                         if cmd_lst[0] == "ReadAnyRegister":
                             print("Read any register command received."
                                 f" To read from addr: {cmd_lst[1]}"

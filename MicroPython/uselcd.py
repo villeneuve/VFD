@@ -41,7 +41,7 @@ def get_buttons():
 async def wait_release():
     while lcd.all_buttons != 0:
         await asyncio.sleep(0.01)
-    await asyncio.sleep(0.05) # debounce delay
+    await asyncio.sleep(0.05) #  debounce delay
 
 def zpad(val):
     """Zero padding for display (ex: 5 -> '05')"""
@@ -64,17 +64,15 @@ async def menu_driver(vfd):
         
     # ------- DEBUG ---
     tempsDebutMenuDriver = time.ticks_ms()
-    # tmaxMenuDriver = 2500 #ms
-    tmaxMenuDriver = 5000 #ms
+    tmaxMenuDriver = 5000 #  ms
     print('Init menu_driver')
     ii = 0
     
     timeLastActivity = time.ticks_ms()
-    # tmaxActivity = 5000 #ms
-    tmaxActivity = 15000 #ms
+    tmaxActivity = 15000 #  ms
     
     lcd.clear()
-    lcd.set_color([100, 100, 100]) # White
+    lcd.set_color([100, 100, 100]) #  White
     lcd.display_top(menus[menu_index])
     lcd.display_bottom(msg_usage)
 
@@ -96,9 +94,9 @@ async def menu_driver(vfd):
             timeLastActivity = time.ticks_ms()
             await wait_release()
         
-        lcd.tick()   # scroll
+        lcd.tick() #  scroll
         
-        ii +=1  # DEBUG
+        ii +=1 #  DEBUG
         
         # --- ETAT MENU ---
         if s.state == s.STATE_MENU :
@@ -188,6 +186,7 @@ async def menu_driver(vfd):
                     menu_index = 1
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
+                    print("From uselcd: Action set time")
 
                 elif btns & BTN_RIGHT: cursor_pos = (cursor_pos + 1) % 6
                 elif btns & BTN_LEFT: cursor_pos = (cursor_pos - 1) % 6
@@ -245,6 +244,7 @@ async def menu_driver(vfd):
                     menu_index = 0
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
+                    print("From uselcd: Action set time")
 
                 elif btns & BTN_RIGHT:
                     cursor_pos = (cursor_pos + 1) % 6
@@ -300,6 +300,7 @@ async def menu_driver(vfd):
                 # HERE we must set the frequency
                 #vfd.SetFreq(freq_hz * 200)  # use method
                 vfd.frequency_setpoint = freq_hz * 200 # use property
+                print("From uselcd: Action set frequency ", freq_hz)
                 
             elif btns & BTN_UP:
                 if freq_hz < 50: freq_hz += 1
@@ -311,15 +312,14 @@ async def menu_driver(vfd):
         
         elif s.state == s.STATE_MOTEUR :
             if btns & BTN_SELECT:
-                # status = vfd.MotorStatus() TBC no need to read again! variable status should be ok 
                 if status == 1:
                     vfd.StopMotor()
-                    print("Action STOP--------------")  # DEBUG
+                    print("From uselcd: Action STOP")
                 elif status == 3:
                     vfd.StartMotor()
-                    print("Action START-------------")  # DEBUG
+                    print("From uselcd: Action START")
                 else:
-                    print("NO ACTION----------------")  # DEBUG
+                    print("From uselcd: No ACTION")
                     pass # unknown status VFD maybe offline we quit
             if btns :
                 s.state = s.STATE_MENU
@@ -331,8 +331,10 @@ async def menu_driver(vfd):
             if btns & BTN_SELECT:
                 if vfd.contactor_status:
                     vfd.OpenContactor()
+                    print("From uselcd: Action open contactor")
                 else:
                     vfd.CloseContactor()
+                    print("From uselcd: Action close contactor")
             if btns :
                 s.state = s.STATE_MENU
                 menu_index = 0
@@ -341,7 +343,7 @@ async def menu_driver(vfd):
                          
         # --- DEBUG ----            
         if time.ticks_diff(time.ticks_ms(), tempsDebutMenuDriver ) > tmaxMenuDriver :
-            print('Hi from uselcd, ii =', ii)
+            print('uselcd running, times in loop =', ii)
             tempsDebutMenuDriver = time.ticks_ms()
         
         # Timeout

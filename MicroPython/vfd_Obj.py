@@ -30,7 +30,6 @@ class VFD:
     
     def __init__(self, host):
         self.host = host
-        self.vfd_temp = "?"  # updated when GetVfdData() is called
         self.vfd_data = [
         # Here are the text and addresses of the 11 vfd monitoring 
         # parameters we are collecting. 
@@ -51,7 +50,7 @@ class VFD:
         # ["U0-25", "Accumulative power-on time", "1 Min", "0x7019", ""],
         # ["U0-26", "Accumulative running time", "0.1 Min", "0x701A", ""]
         #
-        # in 12th position (i=11)  vfd_temp is added
+        # in 12th position (i=11)  vfd temperature is added
         # in 13th position (i=12)  motor_status is added
         #
         "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", "?"
@@ -198,14 +197,16 @@ class VFD:
         if self.isonline:
             try:
                 for i, val in enumerate(self.fan_temp_thres):
-                    if int(self.vfd_temp) < val:
+                    if int(self.vfd_data[11]) < val:
                         break
                 fan.duty_u16(i * 13000)
-            except Exception as e:            # debug 
-                print(repr(e))
+            except Exception as e:  
+                # An error will happen seldom, only when vfd not yet offline 
+                # and vfd temperature (vfd_data[11]) is '?'
+                print('Err. in FanControl:', repr(e)) 
         else:
             fan.duty_u16(0)
-        print("Fan control. VFD Temp:", self.vfd_temp, \
+        print("Fan control. VFD Temp:", self.vfd_data[11], \
         "Fan speed:", fan.duty_u16())
         
     def GetVfdData(self):
@@ -223,10 +224,9 @@ class VFD:
                 ss = s.split('\n')
                 self.vfd_data.append(ss[0])
                 self.vfd_data.append(ss[1])
-                # Now let's update vfd_temp
-                self.vfd_temp = self.ReadAnyRegister(addr=0xF707, count=1)
-                # and add it to vfd_data
-                self.vfd_data.append(self.vfd_temp)
+                # Now let's get vfd temperature
+                s = self.ReadAnyRegister(addr=0xF707, count=1)
+                self.vfd_data.append(s)
                 # now let's add motor status
                 self.vfd_data.append(str(self.MotorStatus()))
             except Exception as e:            # debug 

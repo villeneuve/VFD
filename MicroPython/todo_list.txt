@@ -1,18 +1,14 @@
 TODO LIST
 
-Sur uselcd.py : NON NE PAS FAIRE CETTE MODIF
-Afficher le paramètre en premier sans afficher 'Réglage xx'
-et un appui sur 'Select' fait entrer dans la modif de ce paramètre 
-
 Sur uselcd.py faire en sorte qu'un appui maintenu sur un bouton fasse defiler
-les valeurs, pour eviter de faire de multiples impulsions.
+les valeurs, pour eviter de faire de multiples impulsions sur le bouton.
 
 Sur web_server.py : Faire en sorte que la page html affiche le curseur de
-réglage fréquence de 20 à 50 Hz et non pas de 0 à 50 (remettre la page web
-faite par Gemini)
+réglage fréquence de 20 à 50 Hz et non pas de 0 à 50 
 
 Sur web_server.py : Fréquence mesurée et consigne fréquence doivent afficher'?'
-comme affecté dans les variables fm et fs de la fonction GetStatus()
+comme affecté dans les variables fm et fs de la fonction GetStatus() quand elles
+ne sont pas connues.
 
 Sur web_server.py : Le ON en vert du VFD n'est pas assez visible le mettre 
 en gras (idem pour les autres ON)
@@ -20,7 +16,8 @@ en gras (idem pour les autres ON)
 Sur web_server.py : Ajouter sur la page html avant 'Etat VFD' une ligne
 'Etat Contacteur' qui pourra etre ON/OFF (vert/noir) en fonction de la variable
 cs (qui vaut vfd.contactor_status) dans fonction GetStatus()
-Et ajouter 2 boutons contacteur ON et OFF
+Et ajouter 2 boutons contacteur ON et OFF et qui appelleront les fonctions
+vfd.CloseContactor() et vfd.OpenContactor(). 
 
 Sur web_server.py : la page html doit afficher 'Etat Pompe' en fonction de la
 variable m_s de GetStatus() qui peut etre: ON/OFF/? (vert/noir/noir)
@@ -28,23 +25,8 @@ variable m_s de GetStatus() qui peut etre: ON/OFF/? (vert/noir/noir)
 Sur web_server.py : La date et l'heure ne doivent pas etre a 0 a l'ouverture 
 de la page html mais à la date et heure courante du pico
 
-Sur web_server.py : Si possible ne pas utiliser ou utiliser moins de 
-variables globales comme j'ai pu le faire sur uselcd
 
-Sur vfd_Obj.py : Ne pas lancer le bridge automatiquement mais faire une
-fonction start_bridge(). --Hum pas sur pour ca .. a voir
+NE PAS FAIRE:
+ - Faire le programme journalier
+ - Start wifi from LCD menu?
 
-Faire le programme journalier
-
-l'envoi des mesures et états à Carbet CarbetBox via wifi ou autre sera
-à faire plus tard, quand le coffret elec aura été refait.
-Idee: Pour pouvoir dialoguer depuis CarbetBox utilser les messages du REPL
-comme entre VmcBox et ChaudiereBox pour avoir les infos, notemment les
-mesures.
-
-Start wifi from LCD menu?
-
-Mettre a jour avec git, GitHub et NewBox, avec les modifs de Montreal  FAIT
-
-sur cbpixel il y a une version modifiée de Dialog.py / monitoring qui continue
-a rouler plutot que de sortir sur erreur. Voir si gqrder upstream.. ou..
