@@ -9,7 +9,7 @@ try:
     mcp = MCP23017(i2c)
     lcd = Adafruit_RGB_LCD(mcp)
 except Exception as e:
-    print("Erreur Init:", e)
+    print("[uselcd] Erreur Init:", e)
     while True: pass
 
 # --- MASQUES BOUTONS (basés sur pinout MCP) ---
@@ -65,7 +65,7 @@ async def menu_driver(vfd):
     # ------- DEBUG ---
     tempsDebutMenuDriver = time.ticks_ms()
     tmaxMenuDriver = 5000 #  ms
-    print('Init menu_driver')
+    print('[uselcd] Init menu_driver')
     ii = 0
     
     timeLastActivity = time.ticks_ms()
@@ -84,15 +84,33 @@ async def menu_driver(vfd):
     await wait_release()
     btns = 0
     
+    # --- Variables pour la gestion de l'appui long ---
+    last_btns = 0
+    next_repeat = 0
+    
     while s.state : # we'll leave the loop when back to s.STATE_IDLE ( =0)
          
-        # TODO put the get_buttons() here shouldn't change anything
-        # and code is more readable
-        
-        # btns is read at this loop end.
+        # Gestion intelligente de la répétition des touches
         if btns:
             timeLastActivity = time.ticks_ms()
-            await wait_release()
+            
+            # Si c'est une touche de navigation, on active le défilement continu
+            if btns & (BTN_UP | BTN_DOWN | BTN_LEFT | BTN_RIGHT):
+                ticks_now = time.ticks_ms() # <-- CORRECTION ICI : 'now' devient 'ticks_now'
+                if btns != last_btns:
+                    last_btns = btns
+                    next_repeat = time.ticks_add(ticks_now, 400) # Délai initial avant répétition (400ms)
+                else:
+                    if time.ticks_diff(ticks_now, next_repeat) >= 0:
+                        next_repeat = time.ticks_add(ticks_now, 120) # Vitesse de défilement (120ms)
+                    else:
+                        btns = 0 # On ignore l'appui pour ce cycle de boucle
+            else:
+                # Pour le bouton SELECT, on conserve la sécurité d'attente du relâchement
+                await wait_release()
+                last_btns = 0
+        else:
+            last_btns = 0
         
         lcd.tick() #  scroll
         
@@ -116,22 +134,17 @@ async def menu_driver(vfd):
                     lcd.display_bottom("Up/Dn=val R/L=mv")
                     lcd.blink_cursor(True)
                     now = rtc.datetime()
-                    # [JJ, MM, AAAA] -> indices 2, 1, 0 du RTC
-                    # Simplification : Année modifiable sur les 2 derniers digits
                     vals = [now[2], now[1], now[0] % 100] # Day, Month, Year(2digits)
                     year_prefix = (now[0] // 100) * 100
                     cursor_pos = 0 # 0-1: Jour, 2-3: Mois, 4-5: Année
-                    # Date format = JJ:MM:AAAA
                     date_str = "{}:{}:{}".format(zpad(vals[0]), zpad(vals[1]), year_prefix + vals[2])
                     lcd.display_top("Date=" + date_str)
                     
                 elif menu_index == 1:
                     s.state = s.STATE_EDIT_TIME
-                    # Récupérer l'heure actuelle (YYYY, M, D, w, HH, MM, SS, ms)
                     now = rtc.datetime()
-                    # On travaille sur [HH, MM, SS] -> indices 4, 5, 6
                     vals = [now[4], now[5], now[6]]
-                    cursor_pos = 0 # 0=H_dizaine, 1=H_unité, 2=M_diz, 3=M_uni, 4=S_diz, 5=S_uni
+                    cursor_pos = 0 
                     lcd.clear()
                     lcd.display_bottom("Up/Dn=val R/L=mv")
                     lcd.blink_cursor(True)
@@ -166,19 +179,14 @@ async def menu_driver(vfd):
 
         elif s.state == s.STATE_EDIT_DATE :
 
-            # Mapping curseur physique (Date= occupe 5 chars)
-            # Format JJ:MM:AAAA -> curseur sur J1(5), J2(6), M1(8), M2(9), A3(13), A4(14)
             if cursor_pos < 2: phys = 5 + cursor_pos
             elif cursor_pos < 4: phys = 8 + (cursor_pos - 2)
             else: phys = 13 + (cursor_pos - 4)
             lcd.set_cursor(phys, 0)
             
             if btns:
-                
                 if btns & BTN_SELECT:
-                    # Sauvegarde brute (sans verification validité jour/mois avancée pour cet exemple)
                     new_year = year_prefix + vals[2]
-                    # rtc.datetime((YYYY, M, D, w, HH, MM, SS, ms))
                     new_dt = (new_year, vals[1], vals[0], now[3], now[4], now[5], now[6], 0)
                     rtc.datetime(new_dt)
                     s.state = s.STATE_MENU
@@ -186,7 +194,7 @@ async def menu_driver(vfd):
                     menu_index = 1
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
-                    print("From uselcd: Action set time")
+                    print("[uselcd] From uselcd: Action set time")
 
                 elif btns & BTN_RIGHT: cursor_pos = (cursor_pos + 1) % 6
                 elif btns & BTN_LEFT: cursor_pos = (cursor_pos - 1) % 6
@@ -194,10 +202,9 @@ async def menu_driver(vfd):
                 elif btns & BTN_UP or btns & BTN_DOWN:
                     direction = 1 if (btns & BTN_UP) else -1
                     
-                    # Identification de ce qu'on modifie
-                    if cursor_pos < 2: idx = 0; max_val = 31 # Jour
-                    elif cursor_pos < 4: idx = 1; max_val = 12 # Mois
-                    else: idx = 2; max_val = 99 # Année
+                    if cursor_pos < 2: idx = 0; max_val = 31 
+                    elif cursor_pos < 4: idx = 1; max_val = 12 
+                    else: idx = 2; max_val = 99 
                     
                     tens = vals[idx] // 10
                     units = vals[idx] % 10
@@ -208,11 +215,9 @@ async def menu_driver(vfd):
                         tens = (tens + direction) 
                         if tens < 0: tens = limit
                         if tens > limit: tens = 0
-                        # Clip units if overflow (ex 39 jours)
                         if (tens * 10 + units) > max_val: units = max_val % 10
                     else:
                         limit = 9
-                        # Cas particuliers pour limites précises (ex mois pas > 2 si dizaine=1)
                         if idx == 1 and tens == 1: limit = 2
                         if idx == 0 and tens == 3: limit = 1
                         
@@ -221,22 +226,18 @@ async def menu_driver(vfd):
                         if units > limit: units = 0
                     
                     new_val = tens * 10 + units
-                    if new_val == 0 and idx < 2: new_val = 1 # Pas de jour 0 ou mois 0
+                    if new_val == 0 and idx < 2: new_val = 1 
                     vals[idx] = new_val
                     date_str = "{}:{}:{}".format(zpad(vals[0]), zpad(vals[1]), year_prefix + vals[2])
                     lcd.display_top("Date=" + date_str)
             
         elif s.state == s.STATE_EDIT_TIME :
 
-            # Positionnement curseur LCD (format HH:MM:SS)
-            # Mapping curseur logique (0-5) -> curseur physique (8,9, 11,12, 14,15)
             phys_pos = 8 + cursor_pos + (cursor_pos // 2)
             lcd.set_cursor(phys_pos, 0)
             
             if btns:
                 if btns & BTN_SELECT:
-                    # Sauvegarde
-                    # rtc.datetime((YYYY, M, D, w, HH, MM, SS, ms))
                     new_dt = (now[0], now[1], now[2], now[3], vals[0], vals[1], vals[2], 0)
                     rtc.datetime(new_dt)
                     s.state = s.STATE_MENU
@@ -244,7 +245,7 @@ async def menu_driver(vfd):
                     menu_index = 0
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
-                    print("From uselcd: Action set time")
+                    print("[uselcd] From uselcd: Action set time")
 
                 elif btns & BTN_RIGHT:
                     cursor_pos = (cursor_pos + 1) % 6
@@ -255,31 +256,27 @@ async def menu_driver(vfd):
                 elif btns & BTN_UP or btns & BTN_DOWN:
                     direction = 1 if (btns & BTN_UP) else -1
                     
-                    # Logique modification chiffre par chiffre
-                    # On décompose la valeur courante (ex: 14 -> 1 et 4)
-                    if cursor_pos < 2: # HEURES
+                    if cursor_pos < 2: 
                         idx = 0
                         limit_high_diz = 2
                         limit_high_uni = 9 if vals[0] < 20 else 3
-                    elif cursor_pos < 4: # MINUTES
+                    elif cursor_pos < 4: 
                         idx = 1
                         limit_high_diz = 5
                         limit_high_uni = 9
-                    else: # SECONDES
+                    else: 
                         idx = 2
                         limit_high_diz = 5
                         limit_high_uni = 9
                     
                     tens = vals[idx] // 10
                     units = vals[idx] % 10
-                    
                     is_tens_digit = (cursor_pos % 2 == 0)
                     
                     if is_tens_digit:
                         tens = (tens + direction)
                         if tens < 0: tens = limit_high_diz
                         if tens > limit_high_diz: tens = 0
-                        # Correction auto si on passe 19h -> 29h (interdit) -> 23h
                         if idx == 0 and tens == 2 and units > 3: units = 3 
                     else:
                         units = (units + direction)
@@ -297,10 +294,8 @@ async def menu_driver(vfd):
                 menu_index = 0
                 lcd.display_top(menus[menu_index])
                 lcd.display_bottom(msg_usage)
-                # HERE we must set the frequency
-                #vfd.SetFreq(freq_hz * 200)  # use method
-                vfd.frequency_setpoint = freq_hz * 200 # use property
-                print("From uselcd: Action set frequency ", freq_hz)
+                vfd.frequency_setpoint = freq_hz * 200 
+                print("[uselcd] Action set frequency ", freq_hz)
                 
             elif btns & BTN_UP:
                 if freq_hz < 50: freq_hz += 1
@@ -314,13 +309,13 @@ async def menu_driver(vfd):
             if btns & BTN_SELECT:
                 if status == 1:
                     vfd.StopMotor()
-                    print("From uselcd: Action STOP")
+                    print("[uselcd] Action STOP")
                 elif status == 3:
                     vfd.StartMotor()
-                    print("From uselcd: Action START")
+                    print("[uselcd] Action START")
                 else:
-                    print("From uselcd: No ACTION")
-                    pass # unknown status VFD maybe offline we quit
+                    print("[uselcd] No ACTION")
+                    pass 
             if btns :
                 s.state = s.STATE_MENU
                 menu_index = 0
@@ -331,10 +326,10 @@ async def menu_driver(vfd):
             if btns & BTN_SELECT:
                 if vfd.contactor_status:
                     vfd.OpenContactor()
-                    print("From uselcd: Action open contactor")
+                    print("[uselcd] Action open contactor")
                 else:
                     vfd.CloseContactor()
-                    print("From uselcd: Action close contactor")
+                    print("[uselcd] Action close contactor")
             if btns :
                 s.state = s.STATE_MENU
                 menu_index = 0
@@ -343,14 +338,13 @@ async def menu_driver(vfd):
                          
         # --- DEBUG ----            
         if time.ticks_diff(time.ticks_ms(), tempsDebutMenuDriver ) > tmaxMenuDriver :
-            print('uselcd running, times in loop =', ii)
+            print('[uselcd] running, times in loop =', ii)
             tempsDebutMenuDriver = time.ticks_ms()
         
         # Timeout
         if time.ticks_diff(time.ticks_ms(), timeLastActivity ) > tmaxActivity :
-            s.state = s.STATE_IDLE  # sortie de la boucle
+            s.state = s.STATE_IDLE  
             lcd.set_color([0,0,0])
-            # Display date and time before leaving
             cc = rtc.datetime()
             tt = "{:02d}/{:02d}/{:04d} {:02d}:{:02d}".format(cc[2],cc[1],cc[0],cc[4],cc[5])
             lcd.clear()
@@ -361,5 +355,5 @@ async def menu_driver(vfd):
         
         await asyncio.sleep(0.01)
 
-    print('EXIT menu_driver. s.state =', s.state)
-        
+    print('[uselcd] EXIT menu_driver. s.state =', s.state)
+    

@@ -7,11 +7,18 @@ import datetime
 import socket
 
 # --- Configuration ---
-SERIAL_PORT = '/dev/ttyACM0'
+#SERIAL_PORT = '/dev/ttyACM0' !!!!!!!!!!!!!!!!!!!!!!!!  Modif special CarbetBox
+# mais modif intelligente a conserver! Mais il faut utiliser udev pour creer des liens
+SERIAL_PORT = '/dev/ttyPicoREPL'
 SERIAL_BAUD = 115200
 SOCKET_HOST = '0.0.0.0'  # 'localhost' pour le même PC, '0.0.0.0' pour accepter le réseau
 SOCKET_PORT = 12345
 LOG_FILE = "/tmp/logvfd.txt"
+
+# ---- Temporisation 3s pour laisser le systeme creer /dev/ttyPicoREPL au boot ---
+print('Sleep 3s. Wait :)')
+time.sleep(3)
+
 
 # Verrou pour empêcher plusieurs clients socket d'écrire en même temps sur le CP
 ser_lock = threading.Lock()
@@ -29,8 +36,9 @@ def handle(conn, addr):
                 data = conn.recv(1024)
                 if not data:
                     break  # Le client s'est déconnecté
-                
-                print(f"[Socket] Reçu de {addr} : {data}")
+                    
+                timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S] ")
+                print(f"[Socket] {timestamp} Reçu de {addr} : {data}")
                 
                 # Écriture sécurisée (un seul thread à la fois)
                 with ser_lock:

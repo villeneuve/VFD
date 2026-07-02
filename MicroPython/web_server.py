@@ -7,7 +7,7 @@ import asyncio
 
 # --- VARIABLES GLOBALES DE CONTRÔLE ---
 ap = None
-serveur_tache = None  # Stockera la tâche du serveur
+serveur_tache = None  
 serveur_actif = False
 vfd = None
 
@@ -19,40 +19,49 @@ def GetStatus():
     ms = vfd.MotorStatus()
     if ms is not None:
         if ms == 1: m_s = 'ON'
-        if ms == 3: m_s = 'OFF'
+        elif ms == 3: m_s = 'OFF'
+        else: m_s = '?'
     else: m_s = '?'
+    
     if ol:
-        fm = int(vfd.frequency_measured) / 100  # here we get floats
-        fs = int(vfd.frequency_setpoint) / 200  # ok with html page
+        try:
+            fm = int(vfd.frequency_measured) / 100  
+            fs = int(vfd.frequency_setpoint) / 200  
+        except:
+            fm = '?'
+            fs = '?'
     else:
-        fm = '?'  # TODO here we get str but html page displays '0.00'
-        fs = '?'  # to modify to display '?' (unknown)
+        fm = '?'  
+        fs = '?'  
     ds = vfd.disj_status
-    return (ol, m_s, ds, fm, fs)
+    
+    # Récupération de la date et heure courante du Pico
+    rtc = machine.RTC()
+    now = rtc.datetime() # (YYYY, MM, DD, WD, HH, MM, SS, MS)
+    
+    return (ol, m_s, ds, fm, fs, now, cs)
 
 
 def start():
     global vfd
-    print("ACTION: Start. Result :", vfd.StartMotor())
+    print("[Webserver] ACTION: Start. Result :", vfd.StartMotor())
 
 
 def stop():
     global vfd
-    print("ACTION: Stop. Result :", vfd.StopMotor())
+    print("[Webserver] ACTION: Stop. Result :", vfd.StopMotor())
 
 
 def SetF(v):
     global vfd
-    print(f"ACTION: SetF {v}. Result :", vfd.SetFreq(int(v * 200)))
+    # Sécurité matérielle stricte au cas où la requête URL tenterait de passer outre le slider HTML
+    if v < 20: v = 20
+    if v > 50: v = 50
+    print(f"[Webserver] ACTION: SetF {v}. Result :", vfd.SetFreq(int(v * 200)))
 
 # ==========================================
 # PAGE WEB HTML / JAVASCRIPT
 # ==========================================
-# On utilise Javascript pour :
-# 1. Rafraichir les données en arrière-plan (AJAX) toutes les 5s
-# 2. Générer les listes déroulantes de dates sans surcharger la RAM du Pico
-# 3. Envoyer les commandes sans recharger la page
-
 
 PAGE_HTML = """<!DOCTYPE html>
 <html lang="fr">
@@ -61,7 +70,7 @@ PAGE_HTML = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pico Piscine</title>
     <style>
-        body { font-family: Arial, sans-serif; margin:200 20px; line-height: 1.6; }
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
         .titre { font-weight: bold; color: black; }
         .bouton { padding: 10px 15px; margin: 5px; cursor: pointer; }
         hr { margin: 20px 0; }
@@ -71,21 +80,24 @@ PAGE_HTML = """<!DOCTYPE html>
     <h2>Contrôle Piscine</h2>
     
     <div>
+        <span class="titre">Etat Contacteur: </span><span id="contacteur_etat" style="color: black;">---</span><br>
         <span class="titre">Etat VFD: </span><span id="vfd_etat" style="color: black;">---</span><br>
         <span class="titre">Etat POMPE: </span><span id="pompe_etat" style="color: black;">---</span><br>
         <span class="titre">Defaut: </span><span id="defaut_etat" style="color: black;">---</span><br>
-        <span class="titre">Frequence mesurée: </span><span id="freq_mesuree" style="color: black;">0.00</span><br>
-        <span class="titre">Consigne Frequence: </span><span id="freq_consigne" style="color: black;">0.00</span>
+        <span class="titre">Frequence mesurée: </span><span id="freq_mesuree" style="color: black;">0.00</span> Hz<br>
+        <span class="titre">Consigne Frequence: </span><span id="freq_consigne" style="color: black;">0.00</span> Hz
     </div>
 
     <hr>
     
     <button class="bouton" onclick="fetch('/action?cmd=start')">START</button>
     <button class="bouton" onclick="fetch('/action?cmd=stop')">STOP</button>
+    <button class="bouton" onclick="fetch('/action?cmd=con_on')">Contacteur ON</button>
+    <button class="bouton" onclick="fetch('/action?cmd=con_off')">Contacteur OFF</button>
     
     <hr>
     
-    <span class="titre">REGLAGE CONSIGNE FREQUENCE:</span><br>
+    <span class="titre">REGLAGE CONSIGNE FREQUENCE (20 à 50Hz):</span><br>
     <input type="range" id="sliderF" min="20" max="50" step="0.01" value="20" oninput="document.getElementById('valF').innerText = this.value">
     <span id="valF">20</span> Hz
     <button class="bouton" onclick="fetch('/action?cmd=setf&val=' + document.getElementById('sliderF').value)">Appliquer</button>
@@ -106,34 +118,63 @@ PAGE_HTML = """<!DOCTYPE html>
     <button class="bouton" onclick="window.location.href='/prog'">REGLAGE PROGRAMME JOURNALIER</button>
 
     <script>
+        let dateInitialisee = false;
+
         // Fonction de rafraichissement du statut
         function rafraichirStatut() {
             fetch('/status')
                 .then(response => response.json())
                 .then(data => {
+                    // indices data : 0:ol, 1:m_s, 2:ds, 3:fm, 4:fs, 5:now, 6:cs
+                    
+                    // 1. Etat Contacteur
+                    let contacteur = document.getElementById('contacteur_etat');
+                    contacteur.innerText = data[6] ? "ON" : "OFF";
+                    contacteur.style.color = data[6] ? "green" : "black";
+                    contacteur.style.fontWeight = data[6] ? "bold" : "normal";
+
+                    // 2. Etat VFD
                     let vfd = document.getElementById('vfd_etat');
                     vfd.innerText = data[0] ? "ON" : "OFF";
                     vfd.style.color = data[0] ? "green" : "black";
+                    vfd.style.fontWeight = data[0] ? "bold" : "normal";
 
+                    // 3. Etat Pompe (ON/OFF/?)
                     let pompe = document.getElementById('pompe_etat');
-                    pompe.innerText = data[1] ? "ON" : "OFF";
-                    pompe.style.color = data[1] ? "green" : "black";
+                    pompe.innerText = data[1];
+                    if (data[1] === "ON") {
+                        pompe.style.color = "green";
+                        pompe.style.fontWeight = "bold";
+                    } else {
+                        pompe.style.color = "black";
+                        pompe.style.fontWeight = "normal";
+                    }
 
+                    // 4. Defaut Disjoncteur
                     let defaut = document.getElementById('defaut_etat');
                     defaut.innerText = data[2] ? "DISJONCTION" : "NON";
                     defaut.style.color = data[2] ? "red" : "black";
+                    defaut.style.fontWeight = data[2] ? "bold" : "normal";
 
-                    document.getElementById('freq_mesuree').innerText = data[3].toFixed(2);
-                    document.getElementById('freq_consigne').innerText = data[4].toFixed(2);
+                    // 5. Frequences (Securisées si string '?')
+                    document.getElementById('freq_mesuree').innerText = (typeof data[3] === 'number') ? data[3].toFixed(2) : data[3];
+                    document.getElementById('freq_consigne').innerText = (typeof data[4] === 'number') ? data[4].toFixed(2) : data[4];
+
+                    // 6. Initialisation de la date courante à l'ouverture (une seule fois)
+                    if (!dateInitialisee && data[5]) {
+                        document.getElementById('sel_jj').value = data[5][2];
+                        document.getElementById('sel_mm').value = data[5][1];
+                        document.getElementById('sel_aaaa').value = data[5][0];
+                        document.getElementById('sel_hh').value = data[5][4];
+                        document.getElementById('sel_min').value = data[5][5];
+                        document.getElementById('sel_ss').value = data[5][6];
+                        dateInitialisee = true;
+                    }
                 })
                 .catch(err => console.log("Erreur de rafraîchissement"));
         }
 
-        // Lancement immédiat puis toutes les 5 secondes
-        rafraichirStatut();
-        setInterval(rafraichirStatut, 5000);
-
-        // Remplissage des listes déroulantes pour économiser la RAM du Pico
+        // Remplissage initial des listes déroulantes
         function pop(id, min, max) {
             let s = document.getElementById(id);
             for(let i=min; i<=max; i++) {
@@ -143,6 +184,10 @@ PAGE_HTML = """<!DOCTYPE html>
         }
         pop('sel_jj', 1, 31); pop('sel_mm', 1, 12); pop('sel_aaaa', 2024, 2050);
         pop('sel_hh', 0, 23); pop('sel_min', 0, 59); pop('sel_ss', 0, 59);
+
+        // Lancement immédiat puis toutes les 5 secondes
+        rafraichirStatut();
+        setInterval(rafraichirStatut, 5000);
 
         // Envoi de la date au Pico
         function envoyerDate() {
@@ -171,7 +216,6 @@ async def gerer_client(reader, writer):
         if not request_line:
             return
 
-        # On vide le reste du buffer de lecture
         while await reader.readline() != b"\r\n":
             pass
 
@@ -186,33 +230,39 @@ async def gerer_client(reader, writer):
                 "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + \
                 json.dumps(GetStatus())
         elif url.startswith("/action?"):
-            # Analyse des commandes
             params = url.split('?')[1]
             param_dict = {}
             for couple in params.split('&'):
                 k, v = couple.split('=')
                 param_dict[k] = v
             cmd = param_dict.get('cmd')
+            
             if cmd == 'start':
                 start()
             elif cmd == 'stop':
                 stop()
+            elif cmd == 'con_on':
+                global vfd
+                vfd.CloseContactor()
+                print("[Webserver] ACTION: Contacteur ON")
+            elif cmd == 'con_off':
+                global vfd
+                vfd.OpenContactor()
+                print("[Webserver] ACTION: Contacteur OFF")
             elif cmd == 'setf':
-                val = float(param_dict.get('val', 0))
+                val = float(param_dict.get('val', 20))
                 SetF(val)
             elif cmd == 'rtc':
                 j = int(param_dict.get('j', 1))
                 m = int(param_dict.get('m', 1))
-                a = int(param_dict.get('a', 2024))
+                a = int(param_dict.get('a', 2026))
                 h = int(param_dict.get('h', 0))
                 min_ = int(param_dict.get('min', 0))
                 sec = int(param_dict.get('s', 0))
-                # Mise à jour de l'heure système (RTC) du Pico W
-                # Format:
-                # (year, month, day, weekday, hours, minutes, seconds, subsec)
+                
                 rtc = machine.RTC()
                 rtc.datetime((a, m, j, 0, h, min_, sec, 0))
-                print("ACTION: RTC mis  jour:",
+                print("[Webserver] ACTION: RTC mis à jour:",
                     f"{j:02d}/{m:02d}/{a} {h:02d}:{min_:02d}:{sec:02d}")
 
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"
@@ -222,7 +272,7 @@ async def gerer_client(reader, writer):
         writer.write(response.encode())
         await writer.drain()
     except Exception as e:
-        print("Erreur client:", e)
+        print("[Webserver] Erreur client:", e)
     finally:
         await writer.wait_closed()
 
@@ -230,24 +280,19 @@ async def gerer_client(reader, writer):
 async def serveur_loop():
     """La boucle principale du serveur qui tourne en tâche de fond."""
     global serveur_actif
-    print("Serveur Web démarré sur le port 80.")
+    print("[Webserver] Serveur Web démarré sur le port 80.")
     server = await asyncio.start_server(gerer_client, "0.0.0.0", 80)
     serveur_actif = True
 
     try:
         while serveur_actif:
-            # Laisse du temps processeur aux autres tâches
             await asyncio.sleep(1)
     except asyncio.CancelledError:
         pass
     finally:
         server.close()
         await server.wait_closed()
-        print("Serveur Web stoppé.")
-
-# ==========================================
-# COMMANDES UTILISATEUR
-# ==========================================
+        print("[Webserver] Serveur Web stoppé.")
 
 
 def demarrer_serveur(v):
@@ -256,20 +301,16 @@ def demarrer_serveur(v):
     vfd = v
 
     if serveur_actif:
-        print("Le serveur tourne déjà.")
+        print("[Webserver] Le serveur tourne déjà.")
         return ap.ifconfig()[0]
 
-    # 1. WiFi AP
     ap = network.WLAN(network.AP_IF)
     ap.config(ssid='PicoPiscine', password='laquinta')
     ap.active(True)
     while not ap.active():
         time.sleep(0.1)
-    print(f"WiFi AP 'PicoPiscine' prêt. IP: {ap.ifconfig()[0]}")
+    print(f"[Webserver] WiFi AP 'PicoPiscine' prêt. IP: {ap.ifconfig()[0]}")
 
-    # 2. Lancement de la tâche de fond
-    # Note: On utilise get_event_loop() pour injecter la tâche
-    # dans la boucle globale
     loop = asyncio.get_event_loop()
     serveur_tache = loop.create_task(serveur_loop())
     return ap.ifconfig()[0]
@@ -279,7 +320,7 @@ def stop_serveur():
     global ap, serveur_tache, serveur_actif
 
     if not serveur_actif:
-        print("Le serveur n'est pas lancé.")
+        print("[Webserver] Le serveur n'est pas lancé.")
         return
 
     serveur_actif = False
@@ -289,4 +330,4 @@ def stop_serveur():
     if ap:
         ap.active(False)
 
-    print("Demande d'arrêt envoyée.")
+    print("[Webserver] Demande d'arrêt envoyée.")
