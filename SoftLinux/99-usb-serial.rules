@@ -1,0 +1,7 @@
+# Guy 06/07/2026 PoolBox
+
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0005", SYMLINK+="ttyPicoREPL"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="ttyArduino"
+# Modif remplacement USBtoSerial par ttyAMA2 qui est actif via /boot/firmware/config.txt
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="ttyPicoBridge"
+SUBSYSTEM=="tty", KERNEL=="ttyAMA2", SYMLINK+="ttyPicoBridge"

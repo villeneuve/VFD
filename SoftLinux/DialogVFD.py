@@ -14,7 +14,7 @@ VFDdataList=[
 'Running frequency     ',
 'Bus voltage           ',
 'Output voltage        ',
-'Output voltage        ',
+'Output current        ',
 'Output power          ',
 'Output torque         ',
 'Running speed         ',
@@ -39,7 +39,7 @@ monitoring_parameters = [
     ["U0-01", "Set frequency (Hz)", "0.01 Hz", "0x7001", ""],
     ["U0-02", "Bus voltage", "0.1 V", "0x7002", ""],
     ["U0-03", "Output voltage", "1 V", "0x7003", ""],
-    ["U0-04", "Output current", "0.01 A", "0x7004", ""],
+    ["U0-04", "Output current", "0.1 A", "0x7004", ""],  # Changed 0.01 to 0.1 to match my device
     ["U0-05", "Output power", "0.1 kW", "0x7005", ""],
     ["U0-06", "Output torque", "0.1%", "0x7006", ""],
     ["U0-07", "X state", "1", "0x7007", ""],
@@ -100,7 +100,8 @@ monitoring_parameters.extend([
 # Configure the Modbus RTU client
 # Replace '/dev/ttyUSB0' with your actual serial port
 client = ModbusSerialClient(
-    port='/dev/ttyUSB0',
+    #port='/dev/ttyUSB0',
+    port='/dev/ttyPicoBridge',
     baudrate=9600,
     bytesize=8,
     parity='N',
@@ -121,8 +122,8 @@ d.set_background_title("Communication with VFD via ModBus")
 
 # fields used when input data to read (choice '7 read any')
 fields = [
-    ("Starting address (Hex):", 1, 1, "0xF000", 1, 25, 10, 10, 0),
-    ("Words count (Dec) :", 2, 1, "29",     2, 25, 10, 5,  0)
+    ("Starting address (Hex):", 1, 1, "0xF707", 1, 25, 10, 10, 0),
+    ("Words count (Dec) :", 2, 1, "1",     2, 25, 10, 5,  0)
 ]
 fields_2 = [
     ("Address (Hex):", 1, 1, "0x2000", 1, 25, 10, 10, 0),
@@ -153,17 +154,17 @@ def parameters2text(params):
         text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
               f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
     # Parameters U0-37
-    for item in params[37:38]:
-        text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
-              f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
+    # for item in params[37:38]:
+        # text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
+              # f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
     # Parameters U0-59 ~ 62
     # for item in params[59:63]:
         # text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
               # f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
     # Parameters U0-61
-    for item in params[61:62]:
-        text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
-              f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
+    # for item in params[61:62]:
+        # text = text + (f"| {item[0]:<{w_code}} | {item[1]:<{w_name}} | {item[2]:<{w_unit}} | "
+              # f"{item[3]:<{w_addr}} | " + r"\Z4\Zr" + f"{item[4]:<{w_val}}" + r"\Zn |") + "\n"
 
     return(text)
 
@@ -314,34 +315,54 @@ while END == False:
                     END = True
         if tag == '9':
             try:
-                result = client.read_holding_registers(address=0x7000, count=66, slave=1)
+                result = client.read_holding_registers(address=0x7000, count=27, slave=1)
                 if not result.isError():
-                    for i in range(66):
+                    for i in range(27):
                         monitoring_parameters[i][4] = str(result.registers[i])
                     TextToPrint = parameters2text(monitoring_parameters)
                     d.gauge_start(text=TextToPrint, colors=True, no_collapse=True, title="Monitoring - Values are refreshed every 2s - Ctrl-C to stop")
                     try:
+                        err_count = 0
+                        t_start = time.time()
                         while True:
-                            result = client.read_holding_registers(address=0x7000, count=66, slave=1)
+                            result = client.read_holding_registers(address=0x7000, count=27, slave=1)
                             if not result.isError():
-                                for i in range(66):
+                                for i in range(27):
                                     monitoring_parameters[i][4] = str(result.registers[i])
                                 updated_text = parameters2text(monitoring_parameters)
+                                t_past = int(time.time() - t_start)
+                                updated_text = updated_text + str(err_count) + " Errors "
+                                updated_text = updated_text + "in " + str(t_past) + " seconds"
                                 d.gauge_update(percent=0, text=updated_text, update_text=True)
                                 time.sleep(2)
                             else:
-                                d.gauge_stop()
-                                print(f"Error reading registers: {result}")
-                                END = True
-                                break
+                                # d.gauge_stop()
+                                # print(f"Error reading registers: {result}")
+                                # END = True
+                                # break
+                                # Modif continue even with modbus errors
+                                err_count += 1
+                                t_past = int(time.time() - t_start)
+                                updated_text = f"Error reading registers: {result}\nErrors counter = " + str(err_count)
+                                updated_text = updated_text + "\nIn (running time) = " + str(t_past) + " seconds"
+                                d.gauge_update(percent=0, text=updated_text, update_text=True)
+                                time.sleep(5) # to give time to see the message
                     except KeyboardInterrupt:
+                        t_past = int(time.time() - t_start)
+                        updated_text = "EXIT ON Ctrl-C\nErrors counter = " + str(err_count)
+                        updated_text = updated_text + "\nIn (running time) = " + str(t_past) + " seconds"
+                        # updated_text = updated_text + "\nSLEEP 10s to give you time to read this"
+                        d.gauge_stop()
+                        d.gauge_start(text=TextToPrint, colors=True, no_collapse=True, title="Monitoring - Values are refreshed every 2s - Ctrl-C to stop")
+                        d.gauge_update(percent=0, text=updated_text, update_text=True)  #  WHY DOESN'T WORK?
+                        time.sleep(3)
                         d.gauge_stop()
                 else:
                     print(f"Error reading registers: {result}")
                     END = True
             except:
                 print("HORROR.. ERROR!!!!!")
-                END = True                    
+                END = True
         if tag == '0':
             END = True
         # Anyway we pass here

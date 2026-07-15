@@ -66,4 +66,18 @@ The PLC network adaptors that I use nearby stop working,
 A 1wire humidity sensor inside the house started to give wrong values.
 And a current measure system, also located 20m away, started to give wrong values as well.  
 So I ordered and installed an EMI filter, it is the stainless steel box located just above the VFD.  
-It worked perfectly, no more problem.  
+It worked perfectly, no more problem.   
+
+I decided to add a fan in the cabinet.  
+It isn't absolutely necessary but the cabinet is located on the west and the sun hit it in the afternoon.  
+In summer when it's more than 30°C outside, the internal VFD temperature can reach 50°C.  
+This is still ok for the VFD (maximum is 75°C in mfr doc).  
+With the fan I keep VFD temperature below 38°C.   
+The fan is PWM driven by the raspberry pi pico W and fan speed varies with VFD temperature.  
+
+PICO BOARD    
+
+
+
+FAN    
+

@@ -9,7 +9,8 @@ from pymodbus.exceptions import ModbusException
 # Configure the Modbus RTU client
 # Replace '/dev/ttyUSB0' with your actual serial port
 client = ModbusSerialClient(
-    port='/dev/ttyUSB0',
+    # port='/dev/ttyUSB0',
+    port='/dev/ttyPicoBridge',
     baudrate=9600,
     bytesize=8,
     parity='N',

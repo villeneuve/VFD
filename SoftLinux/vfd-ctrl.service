@@ -1,0 +1,26 @@
+[Unit]
+Description=Contrôle Commande Socket VFD
+After=network.target
+# --- PERSONNALISATION DES LIMITES ---
+# Fenêtre de temps
+StartLimitIntervalSec=120s
+# Nombre de crashs max tolérés dans cette fenêtre
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=guy
+WorkingDirectory=/home/guy/vfd_soft
+ExecStart=/usr/bin/python3 -u /home/guy/vfd_soft/ctrl_cde_sock.py
+Restart=on-failure
+SyslogIdentifier=vfd-main
+# --- TEMPS D'ATTENTE ENTRE 2 ESSAIS ---
+# Attendre 5 secondes avant de relancer le script après un crash
+RestartSec=5s
+# --- ICI ON FORCE SYSTEMD À ENVOYER UN CTRL+C (SIGINT) ---
+# --- quand on fait systemctl stop
+# --- le script python quittera proprement
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

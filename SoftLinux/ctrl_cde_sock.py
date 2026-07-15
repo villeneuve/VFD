@@ -3,24 +3,20 @@ import serial
 import threading
 import time
 import sys
-import datetime
 import socket
+import syslog
 
 # --- Configuration ---
-#SERIAL_PORT = '/dev/ttyACM0' !!!!!!!!!!!!!!!!!!!!!!!!  Modif special CarbetBox
-# mais modif intelligente a conserver! Mais il faut utiliser udev pour creer des liens
 SERIAL_PORT = '/dev/ttyPicoREPL'
 SERIAL_BAUD = 115200
-SOCKET_HOST = '0.0.0.0'  # 'localhost' pour le même PC, '0.0.0.0' pour accepter le réseau
+SOCKET_HOST = '0.0.0.0'
 SOCKET_PORT = 12345
-LOG_FILE = "/tmp/logvfd.txt"
 
 # ---- Temporisation 3s pour laisser le systeme creer /dev/ttyPicoREPL au boot ---
 print('Sleep 3s. Wait :)')
 time.sleep(3)
 
-
-# Verrou pour empêcher plusieurs clients socket d'écrire en même temps sur le CP
+# Verrou pour empêcher plusieurs clients socket d'écrire en même temps
 ser_lock = threading.Lock()
 # Événement pour synchroniser l'arrêt des threads
 stop_event = threading.Event()
@@ -37,8 +33,8 @@ def handle(conn, addr):
                 if not data:
                     break  # Le client s'est déconnecté
                     
-                timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S] ")
-                print(f"[Socket] {timestamp} Reçu de {addr} : {data}")
+                # Le timestamp est supprimé ici, systemd s'en occupe
+                print(f"[Socket] Reçu de {addr} : {data}")
                 
                 # Écriture sécurisée (un seul thread à la fois)
                 with ser_lock:
@@ -64,12 +60,11 @@ def serial_reader_thread():
                 buffer += bytes_recus
                 
                 if buffer.endswith(b"\n"):
-                    timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S] ")
                     lignes = buffer.decode('utf-8', errors='ignore').splitlines()
                     
+                    # Envoi direct des lignes de l'UART dans syslog (sans timestamp manuel)
                     for ligne in lignes:
-                        f.write(f"{timestamp}{ligne}\n")
-                    f.flush()
+                        syslog.syslog(syslog.LOG_INFO, ligne)
                     
                     buffer = b""
             else:
@@ -80,7 +75,7 @@ def serial_reader_thread():
     print("[Série] Thread de lecture arrêté.")
 
 
-# --- INITIALISATION DES MATÉRIELS ET FICHIERS ---
+# --- INITIALISATION DES MATÉRIELS ---
 
 # 1. Ouverture du port Série
 try:
@@ -89,17 +84,12 @@ except serial.SerialException as e:
     print(f"Erreur : Impossible d'ouvrir le port {SERIAL_PORT} ({e})")
     sys.exit(1)
 
-# 2. Ouverture du fichier de Log
-try:
-    f = open(LOG_FILE, "a")
-except IOError as e:
-    print(f"Erreur : Impossible d'ouvrir le fichier {LOG_FILE} ({e})")
-    ser.close()
-    sys.exit(1)
+# 2. Initialisation de Syslog pour l'UART
+# Chaque message envoyé via syslog.syslog() aura l'identifiant 'vfd-uart'
+syslog.openlog(ident="vfd-uart", facility=syslog.LOG_USER)
 
 # 3. Initialisation du Serveur Socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Option pour réutiliser le port immédiatement après un redémarrage
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 try:
     sock.bind((SOCKET_HOST, SOCKET_PORT))
@@ -107,7 +97,6 @@ try:
     print(f"[Serveur] Écoute TCP activée sur {SOCKET_HOST}:{SOCKET_PORT}")
 except Exception as e:
     print(f"Erreur : Impossible de lancer le serveur Socket ({e})")
-    f.close()
     ser.close()
     sys.exit(1)
 
@@ -122,14 +111,12 @@ print("Système prêt. En attente de commandes via Socket... (Ctrl+C pour quitte
 
 try:
     while True:
-        # Configuration d'un timeout court pour permettre à l'écoute d'être interrompue par Ctrl+C
         sock.settimeout(1.0)
         try:
             conn, addr = sock.accept()
-            # Lance un thread pour chaque nouveau client connecté
             threading.Thread(target=handle, args=(conn, addr), daemon=True).start()
         except socket.timeout:
-            continue  # Permet juste de vérifier régulièrement si Ctrl+C a été pressé
+            continue
 except KeyboardInterrupt:
     print("\n[Système] Interruption Ctrl+C détectée. Fermeture en cours...")
 finally:
@@ -137,7 +124,6 @@ finally:
     stop_event.set()
     sock.close()
     reader_thread.join(timeout=1)
-    f.close()
     ser.close()
     print("Retour au prompt shell GNU/Linux. Au revoir.")
     sys.exit(0)
