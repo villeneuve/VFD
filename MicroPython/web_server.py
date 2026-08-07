@@ -4,12 +4,26 @@ import machine
 import time
 import json
 import asyncio
+import gc
+import common
 
 # --- VARIABLES GLOBALES DE CONTRÔLE ---
 ap = None
 serveur_tache = None  
 serveur_actif = False
 vfd = None
+
+
+def unquote(string):
+    """Décode les caractères %XX d'une URL."""
+    parts = string.split('%')
+    res = parts[0]
+    for part in parts[1:]:
+        try:
+            res += chr(int(part[:2], 16)) + part[2:]
+        except Exception:
+            res += '%' + part
+    return res
 
 
 def GetStatus():
@@ -60,7 +74,7 @@ def SetF(v):
     print(f"[Webserver] ACTION: SetF {v}. Result :", vfd.SetFreq(int(v * 200)))
 
 # ==========================================
-# PAGE WEB HTML / JAVASCRIPT
+# PAGES WEB HTML / JAVASCRIPT
 # ==========================================
 
 PAGE_HTML = """<!DOCTYPE html>
@@ -204,13 +218,219 @@ PAGE_HTML = """<!DOCTYPE html>
 </html>
 """
 
+PAGE_PROG_HTML = """<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programme Journalier - Pico Piscine</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .titre { font-weight: bold; color: black; }
+        .bouton { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .explications {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .ligne-prog {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: #f1f1f1;
+            padding: 8px 12px;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+        .bouton-poubelle {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .bouton-poubelle:hover {
+            background-color: #ffdddd;
+            border-color: red;
+        }
+        .bouton-plus {
+            font-size: 24px;
+            font-weight: bold;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bouton-plus:hover {
+            background-color: #218838;
+        }
+        hr { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h2>Édition du Programme Journalier</h2>
+    
+    <button class="bouton" onclick="window.location.href='/'">Retour au contrôle</button>
+
+    <hr>
+
+    <div class="explications">Sur cette page tu peux modifier le programme journalier. 
+Il sera pris en compte immediatement et à la prochaine heure correspondante l'action sera executée.
+Mettre la fréquence à 0 est un ordre de STOP: arret moteur, puis apres 10 minutes ouverture contacteur.
+La frequence est reglable de 20 a 50Hz seulement:
+Si le VFD est online la frequence est immédiatement prise en compte.
+Si le VFD est offline il y aura la sequence de demarrage suivante:
+Fermeture contacteur immediate, attente 1 minute, 
+Reglage frequence à 45Hz, attente 1 minute
+Démarrage moteur, attente 5 minutes (5mn a 45Hz pour amorcage pompe)
+Reglage frequence à valeur demandée. fin</div>
+
+    <hr>
+
+    <div id="zone_edition">
+        <h3>Programme journalier :</h3>
+        <div id="lignes_prog"></div>
+        <div>
+            <button class="bouton-plus" onclick="ajouterLigne()" title="Ajouter une ligne">+</button>
+        </div>
+        <br>
+        <button class="bouton" style="background-color: #007bff; color: white; border: none; font-size: 16px;" onclick="enregistrerProgr()">Enregistrer</button>
+        <span id="msg_statut" style="margin-left: 10px; font-weight: bold;"></span>
+    </div>
+
+    <script>
+        const initialProgr = {{PROGR_DATA}};
+
+        function creermenu(select, min, max) {
+            for (let i = min; i <= max; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = String(i).padStart(2, '0');
+                select.appendChild(opt);
+            }
+        }
+
+        function creerMenuFreq(select) {
+            let opt0 = document.createElement('option');
+            opt0.value = 0;
+            opt0.textContent = "0 (STOP)";
+            select.appendChild(opt0);
+            for (let i = 20; i <= 50; i++) {
+                let opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i + " Hz";
+                select.appendChild(opt);
+            }
+        }
+
+        function ajouterLigne(h = 0, m = 0, f = 0) {
+            const container = document.getElementById('lignes_prog');
+            const div = document.createElement('div');
+            div.className = 'ligne-prog';
+
+            div.innerHTML = `
+                <span>Heures :</span>
+                <select class="sel_h"></select>
+                <span>Minutes :</span>
+                <select class="sel_m"></select>
+                <span>Fréquence :</span>
+                <select class="sel_f"></select>
+                <button class="bouton-poubelle" type="button" onclick="supprimerLigne(this)" title="Supprimer la ligne">🗑️</button>
+            `;
+
+            const selH = div.querySelector('.sel_h');
+            const selM = div.querySelector('.sel_m');
+            const selF = div.querySelector('.sel_f');
+
+            creermenu(selH, 0, 23);
+            creermenu(selM, 0, 59);
+            creerMenuFreq(selF);
+
+            selH.value = h;
+            selM.value = m;
+            selF.value = f;
+
+            container.appendChild(div);
+        }
+
+        function supprimerLigne(btn) {
+            btn.parentElement.remove();
+        }
+
+        function initialiserPage() {
+            if (Array.isArray(initialProgr)) {
+                initialProgr.forEach(triplet => {
+                    ajouterLigne(triplet[0], triplet[1], triplet[2]);
+                });
+            }
+        }
+
+        function enregistrerProgr() {
+            const lignes = document.querySelectorAll('.ligne-prog');
+            let progr = [];
+            lignes.forEach(ligne => {
+                let h = parseInt(ligne.querySelector('.sel_h').value, 10);
+                let m = parseInt(ligne.querySelector('.sel_m').value, 10);
+                let f = parseInt(ligne.querySelector('.sel_f').value, 10);
+                progr.push([h, m, f]);
+            });
+
+            const msg = document.getElementById('msg_statut');
+            msg.style.color = 'black';
+            msg.innerText = "Enregistrement en cours...";
+
+            fetch('/save_prog?data=' + encodeURIComponent(JSON.stringify(progr)))
+                .then(response => response.text())
+                .then(res => {
+                    if (res === 'OK') {
+                        msg.style.color = 'green';
+                        msg.innerText = "Enregistré avec succès !";
+                    } else {
+                        msg.style.color = 'red';
+                        msg.innerText = "Erreur lors de l'enregistrement.";
+                    }
+                })
+                .catch(err => {
+                    msg.style.color = 'red';
+                    msg.innerText = "Erreur réseau.";
+                });
+        }
+
+        initialiserPage();
+    </script>
+</body>
+</html>
+"""
+
+# Découpage et conversion unique en bytes pour économiser la RAM
+_part1, _part2 = PAGE_PROG_HTML.split("{{PROGR_DATA}}")
+PAGE_PROG_BYTES_1 = _part1.encode('utf-8')
+PAGE_PROG_BYTES_2 = _part2.encode('utf-8')
+PAGE_HTML_BYTES = PAGE_HTML.encode('utf-8')
+
+# Libération immédiate des temporaires
+del _part1, _part2, PAGE_HTML, PAGE_PROG_HTML
+gc.collect()
+
 # ==========================================
 # LOGIQUE DU SERVEUR (ASYNCHRONE)
 # ==========================================
-
-
 async def gerer_client(reader, writer):
-    """Gère une connexion client individuelle sans bloquer le reste."""
+    """Gère une connexion client de manière économe en mémoire RAM."""
+    gc.collect()  # Libère la mémoire inutilisée dès le début de la requête
+    
     try:
         request_line = await reader.readline()
         if not request_line:
@@ -223,12 +443,57 @@ async def gerer_client(reader, writer):
             if len(request_line.split()) > 1 else "/"
 
         if url == "/":
-            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + \
-                PAGE_HTML
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n")
+            writer.write(PAGE_HTML_BYTES)
+            await writer.drain()
+
+        elif url == "/prog":
+            # Envoi par morceaux (stream) : AUCUNE création de grosse chaîne en mémoire
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n")
+            writer.write(PAGE_PROG_BYTES_1)
+            writer.write(json.dumps(common.progr).encode('utf-8'))
+            writer.write(PAGE_PROG_BYTES_2)
+            await writer.drain()
+
+        elif url.startswith("/save_prog?"):
+            try:
+                raw_params = url.split("?", 1)[1]
+                params_dict = {}
+                for couple in raw_params.split("&"):
+                    if "=" in couple:
+                        k, v = couple.split("=", 1)
+                        params_dict[k] = v
+                
+                data_str = unquote(params_dict.get("data", "[]"))
+                data = json.loads(data_str)
+                
+                new_progr = []
+                for item in data:
+                    if len(item) == 3:
+                        h = int(item[0])
+                        m = int(item[1])
+                        f = int(item[2])
+                        if 0 <= h <= 23 and 0 <= m <= 59 and (f == 0 or 20 <= f <= 50):
+                            new_progr.append((h, m, f))
+                
+                if common.progr != new_progr:
+                    common.progr = new_progr
+                    print("[Webserver] ACTION: Programme journalier mis à jour :", common.progr)
+                else:
+                    print("[Webserver] ACTION: Programme journalier inchangé.")
+                
+                writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK")
+                await writer.drain()
+            except Exception as e:
+                print("[Webserver] Erreur enregistrement programme :", e)
+                writer.write(b"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\n\r\nERR")
+                await writer.drain()
+
         elif url == "/status":
-            response = \
-                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" + \
-                json.dumps(GetStatus())
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n")
+            writer.write(json.dumps(GetStatus()).encode('utf-8'))
+            await writer.drain()
+
         elif url.startswith("/action?"):
             params = url.split('?')[1]
             param_dict = {}
@@ -264,17 +529,21 @@ async def gerer_client(reader, writer):
                 rtc.datetime((a, m, j, 0, h, min_, sec, 0))
                 print("[Webserver] ACTION: RTC mis à jour:",
                     f"{j:02d}/{m:02d}/{a} {h:02d}:{min_:02d}:{sec:02d}")
+                common.time_has_changed = True
 
-            response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK")
+            await writer.drain()
         else:
-            response = "HTTP/1.1 404 Not Found\r\n\r\n"
+            writer.write(b"HTTP/1.1 404 Not Found\r\n\r\n")
+            await writer.drain()
 
-        writer.write(response.encode())
-        await writer.drain()
     except Exception as e:
         print("[Webserver] Erreur client:", e)
     finally:
         await writer.wait_closed()
+        gc.collect()  # Nettoyage systématique après la fermeture du socket
+
+
 
 
 async def serveur_loop():

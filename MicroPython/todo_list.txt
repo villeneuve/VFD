@@ -1,8 +1,0 @@
-TODO LIST
-
-Tout est fait..
-
-NE PAS FAIRE:
- - Faire le programme journalier
- - Start wifi from LCD menu?
-

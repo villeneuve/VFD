@@ -2,6 +2,7 @@ import machine
 import time
 from lcd_Adafruit_16x2_RGB_i2c import MCP23017, Adafruit_RGB_LCD
 import asyncio
+import common
 
 # --- CONFIGURATION I2C ---
 i2c = machine.I2C(1, sda=machine.Pin(2), scl=machine.Pin(3), freq=400000)
@@ -63,10 +64,11 @@ async def menu_driver(vfd):
     menu_index = 0
         
     # ------- DEBUG ---
-    tempsDebutMenuDriver = time.ticks_ms()
-    tmaxMenuDriver = 5000 #  ms
+    # tempsDebutMenuDriver = time.ticks_ms()
+    # tmaxMenuDriver = 5000 #  ms
+    # ii = 0
+    
     print('[uselcd] Init menu_driver')
-    ii = 0
     
     timeLastActivity = time.ticks_ms()
     tmaxActivity = 15000 #  ms
@@ -114,7 +116,7 @@ async def menu_driver(vfd):
         
         lcd.tick() #  scroll
         
-        ii +=1 #  DEBUG
+        # ii +=1 #  DEBUG
         
         # --- ETAT MENU ---
         if s.state == s.STATE_MENU :
@@ -195,6 +197,7 @@ async def menu_driver(vfd):
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
                     print("[uselcd] From uselcd: Action set time")
+                    common.time_has_changed = True
 
                 elif btns & BTN_RIGHT: cursor_pos = (cursor_pos + 1) % 6
                 elif btns & BTN_LEFT: cursor_pos = (cursor_pos - 1) % 6
@@ -246,6 +249,7 @@ async def menu_driver(vfd):
                     lcd.display_top(menus[menu_index])
                     lcd.display_bottom(msg_usage)
                     print("[uselcd] From uselcd: Action set time")
+                    common.time_has_changed = True
 
                 elif btns & BTN_RIGHT:
                     cursor_pos = (cursor_pos + 1) % 6
@@ -337,9 +341,9 @@ async def menu_driver(vfd):
                 lcd.display_bottom(msg_usage)
                          
         # --- DEBUG ----            
-        if time.ticks_diff(time.ticks_ms(), tempsDebutMenuDriver ) > tmaxMenuDriver :
-            print('[uselcd] running, times in loop =', ii)
-            tempsDebutMenuDriver = time.ticks_ms()
+        # if time.ticks_diff(time.ticks_ms(), tempsDebutMenuDriver ) > tmaxMenuDriver :
+            # print('[uselcd] running, times in loop =', ii)
+            # tempsDebutMenuDriver = time.ticks_ms()
         
         # Timeout
         if time.ticks_diff(time.ticks_ms(), timeLastActivity ) > tmaxActivity :
