@@ -1,0 +1,19 @@
+[Unit]
+Description=Service d'envoi MQTT pour VFD Pompe Piscine
+After=network.target mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+User=guy
+WorkingDirectory=/home/guy/vfd_soft
+ExecStart=/usr/bin/python3 /home/guy/vfd_soft/mqtt_vfd_publisher.py
+Restart=always
+RestartSec=5s
+KillSignal=SIGINT
+
+# Force Python à ne pas mettre les sorties print en tampon dans les logs
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

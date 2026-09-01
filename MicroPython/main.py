@@ -8,8 +8,7 @@ from CetTime import cettime
 button = Pin(6, Pin.IN, Pin.PULL_UP)
 
 SERVER_TIME_OUT = 1000 * 60 * 5  #  ms 5 minutes
-PERIODIC_SENSOR_READING = 30000 #  30 seconds
-PERIODIC_DATA_READING = 40000 #  must be > PERIODIC_SENSOR_READING
+PERIODIC_DATA_READING = 20000 #  20 seconds
 PERIODIC_FAN_CONTROL = 50000 #  50 seconds
 T_LCD_MAX = 10 * 1000  #  10 sec 
 
@@ -131,7 +130,6 @@ async def main_1():
     jj = 0
     
     t_start_lcd = time.ticks_ms()
-    t_start_sensors_reading = time.ticks_ms()
     t_start_data_reading = time.ticks_ms()
     t_start_fan_control = time.ticks_ms()
 
@@ -157,10 +155,10 @@ async def main_1():
             asyncio.create_task(uselcd.menu_driver(v))
 
         # Sensors reading (async, 750ms needed for DS18B20 temperature sensors)
-        if time.ticks_diff(time.ticks_ms(), t_start_sensors_reading) > \
-                    PERIODIC_SENSOR_READING:
+        if time.ticks_diff(time.ticks_ms(), t_start_data_reading) > \
+                    PERIODIC_DATA_READING:
             print("Reading sensors..")
-            t_start_sensors_reading = time.ticks_ms()
+            t_start_data_reading = time.ticks_ms()
             asyncio.create_task(read_sensors.get_sensors_value())
         # We read sensors values if available
         if read_sensors.sensors.flag_ready_to_read:
@@ -174,13 +172,10 @@ async def main_1():
             print(" Total access to each sensor:", read_sensors.sensors.count)
             print("Last update time:", \
             time.localtime(read_sensors.sensors.last_update))
-            
-        if time.ticks_diff(time.ticks_ms(), t_start_data_reading) > \
-                    PERIODIC_DATA_READING:
-            t_start_data_reading = time.ticks_ms()
+            # Now we can get all data and publish everything
             v.GetAllData()
             print("Data:", v.all_data)
-            
+                       
         if time.ticks_diff(time.ticks_ms(), t_start_fan_control) > \
                     PERIODIC_FAN_CONTROL:
             t_start_fan_control = time.ticks_ms()
@@ -241,15 +236,27 @@ async def main_2():
                         if cmd_lst[0] == "ContactorOn":
                             print("Contactor ON order received")
                             v.CloseContactor()
+                            await asyncio.sleep_ms(50)  # because of state
+                            v.GetAllData()              # change we publish
+                            print("Data:", v.all_data)  # new data immediatly
                         elif cmd_lst[0] == "ContactorOff":
                             print("Contactor OFF order received")
                             v.OpenContactor()
+                            await asyncio.sleep_ms(50)  # because of state
+                            v.GetAllData()              # change we publish
+                            print("Data:", v.all_data)  # new data immediatly
                         elif cmd_lst[0] == "MotorOn":
                             print("Motor ON order received")
                             v.StartMotor()
+                            await asyncio.sleep_ms(50)  # because of state
+                            v.GetAllData()              # change we publish
+                            print("Data:", v.all_data)  # new data immediatly
                         elif cmd_lst[0] == "MotorOff":
                             print("Motor OFF order received")
                             v.StopMotor()
+                            await asyncio.sleep_ms(2010)  # because of state
+                            v.GetAllData()              # change we publish
+                            print("Data:", v.all_data)  # new data immediatly
                         elif cmd_lst[0] == "ShowProgram":
                             print("Daily program :", common.progr)
                         else:
@@ -260,6 +267,9 @@ async def main_2():
                                 f" To set to : {cmd_lst[1]}")
                             try:
                                 v.frequency_setpoint = int(cmd_lst[1]) * 200
+                                await asyncio.sleep_ms(200) # because of state
+                                v.GetAllData()             # change we publish
+                                print("Data:", v.all_data) # new data now   
                             except Exception as e:
                                 print("Frequency must be an integer in 0~50Hz")
                                 print(repr(e))

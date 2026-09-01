@@ -10,7 +10,8 @@ time_has_changed = False
 
 # Same thing for the list of tuples containing the daily program
 # we declare it here and import it in each module where it's needed.
-progr = [(6, 0, 35), (7, 0, 25), (21, 0, 0)]  # liste de tuples
+# progr = [(6, 0, 35), (7, 0, 25), (21, 0, 0)]  # liste de tuples
+progr = []  # changed 24/08/2026 rmpty program
 # defaut: start 35Hz a 6:00, 25Hz a 7:00 stop a 21:00
 # format [(heure, minute, action), (heure, minute, action), etc..]
 

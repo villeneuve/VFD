@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+
+# ce code roule de pair avec /etc/systemd/system/vfd-ctrl.service
+# Si ce script plante (si par ex le pico est reset ou mis hors tension)
+# donc perte de /dev/ttyPicoREPL et arret thread read serial
+# systemd tentera indefiniment toutes les 10 secondes de relancer ce 
+# script (StartLimitIntervalSec=0) toutes les 10 secondes
+# Donc meme si le pico est hors/sous tension ce les logs, mqtt etc..
+# tout devrait repartir quand le pico re-apparait.
+
 import serial
 import threading
 import time
@@ -12,7 +21,7 @@ SERIAL_BAUD = 115200
 SOCKET_HOST = '0.0.0.0'
 SOCKET_PORT = 12345
 
-# ---- Temporisation 3s pour laisser le systeme creer /dev/ttyPicoREPL au boot ---
+# Temporisation 3s pour laisser le systeme creer /dev/ttyPicoREPL au boot
 print('Sleep 3s. Wait :)')
 time.sleep(3)
 
@@ -21,9 +30,7 @@ ser_lock = threading.Lock()
 # Événement pour synchroniser l'arrêt des threads
 stop_event = threading.Event()
 
-
-# --- FONCTION GESTIONNAIRE DE CLIENT SOCKET ---
-
+#  FONCTION GESTIONNAIRE DE CLIENT SOCKET
 def handle(conn, addr):
     print(f"[Socket] Connexion de {addr} établie.")
     with conn:
@@ -33,7 +40,7 @@ def handle(conn, addr):
                 if not data:
                     break  # Le client s'est déconnecté
                     
-                # Le timestamp est supprimé ici, systemd s'en occupe
+                # Pas de timestamp ici, systemd s'en occupe
                 print(f"[Socket] Reçu de {addr} : {data}")
                 
                 # Écriture sécurisée (un seul thread à la fois)
@@ -47,9 +54,7 @@ def handle(conn, addr):
                 break
     print(f"[Socket] Connexion de {addr} fermée.")
 
-
-# --- PREMIÈRE PARTIE : Lecture Série non-bloquante (Arrière-plan) ---
-
+# PREMIÈRE PARTIE : Lecture Série non-bloquante (Arrière-plan)
 def serial_reader_thread():
     buffer = b""
     print("[Série] Thread de lecture démarré.")
@@ -61,21 +66,19 @@ def serial_reader_thread():
                 
                 if buffer.endswith(b"\n"):
                     lignes = buffer.decode('utf-8', errors='ignore').splitlines()
-                    
-                    # Envoi direct des lignes de l'UART dans syslog (sans timestamp manuel)
+                    # Envoi direct des lignes de l'UART dans syslog
                     for ligne in lignes:
                         syslog.syslog(syslog.LOG_INFO, ligne)
-                    
                     buffer = b""
             else:
                 time.sleep(0.01)
         except Exception as e:
-            print(f"\n[Série] Erreur lors de la lecture : {e}")
-            break
+            print(f"\n[Série] Erreur critique sur le port série : {e}")
+            break  # Sortie du thread en cas d'I/O Error
     print("[Série] Thread de lecture arrêté.")
 
 
-# --- INITIALISATION DES MATÉRIELS ---
+# --- INITIALISATION ---
 
 # 1. Ouverture du port Série
 try:
@@ -101,7 +104,7 @@ except Exception as e:
     sys.exit(1)
 
 
-# --- DÉMARRAGE DES THREADS ET BOUCLE PRINCIPALE ---
+# --- DÉMARRAGE THREADS ET SURVEILLANCE ---
 
 # Lancement du lecteur série en arrière-plan
 reader_thread = threading.Thread(target=serial_reader_thread, daemon=True)
@@ -109,21 +112,37 @@ reader_thread.start()
 
 print("Système prêt. En attente de commandes via Socket... (Ctrl+C pour quitter)")
 
+# Code de sortie par défaut (0 = succès)
+exit_code = 0
+
 try:
-    while True:
+    while not stop_event.is_set():
+        # VÉRIFICATION CRITIQUE : Le thread série est-il toujours en vie ?
+        if not reader_thread.is_alive():
+            raise RuntimeError("Le thread de lecture série a planté (déconnexion MCU ?).")
+
         sock.settimeout(1.0)
         try:
             conn, addr = sock.accept()
             threading.Thread(target=handle, args=(conn, addr), daemon=True).start()
         except socket.timeout:
             continue
+
 except KeyboardInterrupt:
-    print("\n[Système] Interruption Ctrl+C détectée. Fermeture en cours...")
+    print("\n[Système] Arrêt demandé (Ctrl+C / SIGINT).")
+    exit_code = 0  # Arrêt volontaire -> Code 0 (Systemd ne redémarre pas)
+
+except Exception as e:
+    print(f"\n[Système] Erreur fatale : {e}")
+    exit_code = 1  # Crash -> Code 1 (Systemd va redémarrer le service)
+
 finally:
-    # --- Nettoyage propre ---
     stop_event.set()
     sock.close()
     reader_thread.join(timeout=1)
-    ser.close()
-    print("Retour au prompt shell GNU/Linux. Au revoir.")
-    sys.exit(0)
+    try:
+        ser.close()
+    except Exception:
+        pass
+    print(f"Fermeture du script avec le code de sortie {exit_code}.")
+    sys.exit(exit_code)

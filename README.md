@@ -1,4 +1,33 @@
 # VFD (Variable Frequency Drive) on swimming pool water pump.  
+
+
+# Contents  
+
+1. [Introduction](./README.md#1-introduction)   
+
+
+
+
+
+
+# 1. Introduction   
+
+et oui ici intro
+
+## 1.1 Why a VFD?   
+
+parceque je le veux
+
+## 1.2 Project overview   
+
+ceci est le p overview
+
+
+
+
+
+
+
 This project uses a VFD to drive the swimming pool water pump motor.  
 The VFD is from CNWeiken the model is **WK600D-0022-M1T : 1 phase 2.2kW**.  
 The swimming pool pump motor is rated **230Vac 50Hz 5.5A 1.2kW**.  
@@ -56,6 +85,7 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 
 
 <img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretInt.png">    
+<img src="./Hardware/Pictures/CoffretInt.png">
 
 
 <img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretExt.png">
