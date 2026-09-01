@@ -7,7 +7,7 @@
  1.1 [Why a VFD](./README.md#11-why-a-vfd)   
  1.2 [VFD overview](./README.md#12-vfd-overview)    
  1.3 [Project overview](./README.md#13-project-overview)  
- 1.4 [Project architecture](./README.md#14-project-architecture)
+ 1.4 [Project architecture](./README.md#14-project-architecture)  
  1.5 [Documentation](./README.md#15-documentation)   
 
 
@@ -38,10 +38,15 @@ There are 3 main components:
  - The electrical cabinet hosting the VFD and necessary accessories.  
  - The microcontroller and its software to drive the VFD (a Raspberry pi Pico W and MicroPython)  
  - The supervisor: a Raspberry Pi 4 1Gb + Touch display 2 running Fuxa SCADA.  
+
 The pump must be able to run even if a component fails. To achieve this there is a full manual mode at the electrical level. 
 Furthermore the Pico is able to run even if the supervisor is out of order.
 A LCD screen and push buttons permit to drive the pump.
-And finally the supervisor is connected to the home network but the Scada can run and drive the VFD even without network.  
+And finally the supervisor is connected to the home network but the Scada can run and drive the VFD even without network.
+
+The Pico W WiFi is always off and can be switched on by a push button, it is then possible to drive the system from a web page.  
+
+Driving the system from the supervisor, the LCD, WiFi or even from other devices on the network includes: start/stop the pump, open/close the contatctor to energize the VFD, set the frequency (the pump speed), define the pump daily program, and other utility tasks.
  
 ## 1.4 Project architecture
 
