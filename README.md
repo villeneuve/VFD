@@ -4,7 +4,8 @@
 # Contents  
 
 1. [Introduction](./README.md#1-introduction)   
-
+ 1.1 [Why a VFD?](./README.md#11)   
+ 1.2 [Project overview](./README.md#12)   
 
 
 
