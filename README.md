@@ -27,11 +27,13 @@ iiiiiiiiiiii
 
 # 1. Introduction   
 
-et oui ici intro
+This page describes the installation of a VFD (Variable Frequency Drive) on a swimming pool pump and its computerized control system.  
 
 ## 1.1 Why a VFD?   
 
-parceque je le veux
+Pool professionals explain that a variable speed drive on the pump is beneficial because running the pump at a lower speed improves filtration—as the water remains in the filter longer—and allows for extended filtration cycles.  
+The principle behind a VFD is simple: the rotational speed of an induction motor depends on the frequency. A VFD varies the frequency, thereby adjusting the motor's speed.  
+
 
 ## 1.2 VFD overview   
 
@@ -107,12 +109,8 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 **Here are photos of the VFD in its cabinet.**
 
 
-<img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretInt.png">    
 <img src="./Hardware/Pictures/CoffretInt.png">
-
-
-<img src="https://github.com/villeneuve/VFD/blob/main//Hardware/Pictures/CoffretExt.png">
-
+<img src="./Hardware/Pictures/CoffretExt.png">
 
 When I started the VFD for the first time I had several ElectroMagnetic Interferences (EMI).  
 The PLC network adaptors that I use nearby stop working,   
