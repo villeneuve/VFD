@@ -5,22 +5,24 @@
 
 1. [Introduction](./README.md#1-introduction)   
  1.1 [Why a VFD](./README.md#11-why-a-vfd)   
- 1.2 [Project overview](./README.md#12-project-overview)   
+ 1.2 [VFD overview](./README.md#12-vfd-overview)    
+ 1.3 [Project overview](./README.md#13-project-overview)   
+ 1.4 [Documentation](./README.md#14-documentation)   
 
 
-qdqdqd
-qdqdq
-qsdqdqs
-qsdqdqd
-qdqdqsd
-qsdqdq
-qsdqdq
-qdqdqd
-qsdqdsqd
-qsddqd
-TEST TESTS 
-UNDER WORKS
-iiiiiiiiiiii
+qdqdqd  
+qdqdq  
+qsdqdqs  
+qsdqdqd  
+qdqdqsd  
+qsdqdq  
+qsdqdq  
+qdqdqd  
+qsdqdsqd  
+qsddqd  
+TEST TESTS   
+UNDER WORKS  
+iiiiiiiiiiii  
 
 
 # 1. Introduction   
@@ -31,12 +33,20 @@ et oui ici intro
 
 parceque je le veux
 
-## 1.2 Project overview   
+## 1.2 VFD overview   
+
+This VFD was bought on [AliExpress](https://fr.aliexpress.com/item/1005007804372091.html?pdp_npi=4%40dis%21EUR%21%E2%82%AC%2083%2C68%21%E2%82%AC%2054%2C39%21%21%2196.00%2162.40%21%402103835e17588183866768574e4166%2112000042258239052%21sh%21FR%210%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007523647771.1005007804372091&gatewayAdapt=glo2fra).  
+
+
+## 1.3 Project overview
 
 ceci est le p overview
 
+## 1.4 Documentation
 
-
+here is the doc    
+The documentation can be found on [CNWeiken website](http://www.cnweiken.cn/upload/files/20230819/6382804255758362504914814.pdf?spm=a2g0o.detail.1000023.3.911b2tC62tC61r&file=6382804255758362504914814.pdf).     
+A copy of this doc + the Modbus documentation is on this repository in the Documentation folder.  
 
 
 
