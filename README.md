@@ -11,7 +11,7 @@
  1.5 [Documentation](./README.md#15-documentation)   
 2. [Hardware](./README.md#2-hardware)   
  2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
- 2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico -w)    
+ 2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
  2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
