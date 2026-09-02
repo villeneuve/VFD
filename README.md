@@ -9,8 +9,12 @@
  1.3 [Project overview](./README.md#13-project-overview)  
  1.4 [Project architecture](./README.md#14-project-architecture)  
  1.5 [Documentation](./README.md#15-documentation)   
-
-
+2. [Hardware](./README.md#2-hardware)   
+ 2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
+ 2.2 [Microcontroller Pico W](./README.md#22-picow)    
+ 2.3 [Supervisor Pi4](./README.md#23-pi4)   
+  
+  
 # TEST TESTS   
 # UNDER WORKS  
   
@@ -46,18 +50,35 @@ And finally the supervisor is connected to the home network but the Scada can ru
 
 The Pico W WiFi is always off and can be switched on by a push button, it is then possible to drive the system from a web page.  
 
-Driving the system from the supervisor, the LCD, WiFi or even from other devices on the network includes: start/stop the pump, open/close the contatctor to energize the VFD, set the frequency (the pump speed), define the pump daily program, and other utility tasks.
+Driving the system from the supervisor, the LCD, WiFi or even from other devices on the network includes: start/stop the pump, open/close the contactor to energize the VFD, set the frequency (the pump speed), define the pump daily program, and other utility tasks.
  
 ## 1.4 Project architecture
 
-<img src="./Hardware/Pictures/ProjectArchitecture.png">
+<img src="./Ressources/ProjectArchitecture.png">
 
 ## 1.5 Documentation
    
 The VFD documentation can be found on [CNWeiken website](http://www.cnweiken.cn/upload/files/20230819/6382804255758362504914814.pdf?spm=a2g0o.detail.1000023.3.911b2tC62tC61r&file=6382804255758362504914814.pdf).     
 A copy of this doc + the Modbus documentation is on this repository in the Documentation folder.  
   
-     
+# 2. Hardware
+
+## 2.1 Electrical cabinet  
+
+blabla..  
+
+## 2.2 Microcontroller - Raspberry Pi Pico W  
+
+blabla..  
+
+## 2.3 Supervisor - Raspberry Pi 4
+
+blabla..  
+
+
+
+
+
 
 The VFD is now installed in its cabinet and is running. It drives the swimming pool water pump. It's working as expected.  
 
@@ -105,8 +126,8 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 **Here are photos of the VFD in its cabinet.**
 
 
-<img src="./Hardware/Pictures/CoffretInt.png">
-<img src="./Hardware/Pictures/CoffretExt.png">
+<img src="./Ressources/CoffretInt.png">
+<img src="./Ressources/CoffretExt.png">
 
 When I started the VFD for the first time I had several ElectroMagnetic Interferences (EMI).  
 The PLC network adaptors that I use nearby stop working,   
@@ -128,3 +149,8 @@ PICO BOARD
 
 FAN    
 
+
+
+SUPERVISION FUXA SCADA
+
+<img src="./Ressources/SupervisionMainView.gif">
