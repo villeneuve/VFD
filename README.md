@@ -11,8 +11,8 @@
  1.5 [Documentation](./README.md#15-documentation)   
 2. [Hardware](./README.md#2-hardware)   
  2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
- 2.2 [Microcontroller Pico W](./README.md#22-picow)    
- 2.3 [Supervisor Pi4](./README.md#23-pi4)   
+ 2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico -w)    
+ 2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
 # TEST TESTS   
@@ -36,7 +36,7 @@ The VFD is from CNWeiken the model is **WK600D-0022-M1T : 1 phase 2.2kW**.
 This VFD was bought on [AliExpress](https://fr.aliexpress.com/item/1005007804372091.html?pdp_npi=4%40dis%21EUR%21%E2%82%AC%2083%2C68%21%E2%82%AC%2054%2C39%21%21%2196.00%2162.40%21%402103835e17588183866768574e4166%2112000042258239052%21sh%21FR%210%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007523647771.1005007804372091&gatewayAdapt=glo2fra).  
 The swimming pool pump motor is rated **230Vac 50Hz 5.5A 1.2kW**.  
 
-## 1.3 Project overview
+## 1.3 Project overview  
 
 There are 3 main components:   
  - The electrical cabinet hosting the VFD and necessary accessories.  
@@ -67,11 +67,11 @@ A copy of this doc + the Modbus documentation is on this repository in the Docum
 
 blabla..  
 
-## 2.2 Microcontroller - Raspberry Pi Pico W  
+## 2.2 Microcontroller Raspberry Pi Pico W  
 
 blabla..  
 
-## 2.3 Supervisor - Raspberry Pi 4
+## 2.3 Supervisor Raspberry Pi 4  
 
 blabla..  
 
