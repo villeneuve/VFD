@@ -23,6 +23,9 @@
 # 1. Introduction   
 
 This page describes the installation of a VFD (Variable Frequency Drive) on a swimming pool pump and its control system.  
+The description of the full system includes the electrical part with the VFD itself, the microcontroller with its software to drive the VFD
+and the supervision computer with its software.  
+However more simple tools are also included here such as direct PC (or microcontroller) to VFD software.  
 
 ## 1.1 Why a VFD?   
 
@@ -65,7 +68,32 @@ A copy of this doc + the Modbus documentation is on this repository in the Docum
 
 ## 2.1 Electrical cabinet  
 
-blabla..  
+**Here are photos of the VFD in its cabinet.**
+
+
+<img src="./Ressources/CoffretInt.png">
+<img src="./Ressources/CoffretExt.png">
+
+The cabinet [single line diagram](./Hardware/SchemaElectrique.pdf) is available in the hardware folder.  
+
+Downstream the main breaker there are 4 feeders, 2 are spares, 1 for the 5V/3A Pico power supply and one contactor for the VFD.  
+Even if the VFD can remain always energized, I choosed to feed it by a contactor so I can switch it off when it isn't needed.  
+Even if the VFD includes a motor protection I have added a motor circuit breaker after the VFD.  
+The VFD and the pump motor can be operated in full manual mode, without the Pico, from the cabinet push buttons.  
+
+When I started the VFD for the first time I had several ElectroMagnetic Interferences (EMI).  
+The PLC network adaptors that I use nearby stop working,   
+A 1wire humidity sensor inside the house started to give wrong values.
+And a current measure system, also located 20m away, started to give wrong values as well.  
+So I ordered and installed an EMI filter, it is the stainless steel box located just above the VFD.  
+It works perfectly, no more problem.   
+
+I decided to add a fan in the cabinet.  
+It isn't absolutely necessary but the cabinet is located on the west and the sun hit it in the afternoon.  
+In summer when it's more than 30°C outside, the internal VFD temperature can reach 50°C.  
+This is still ok for the VFD (maximum is 75°C in mfr doc).  
+With the fan I keep VFD temperature below 38°C.   
+The fan is PWM driven by the raspberry pi pico W and fan speed varies with VFD temperature.
 
 ## 2.2 Microcontroller Raspberry Pi Pico W  
 
@@ -123,25 +151,7 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 
 
 
-**Here are photos of the VFD in its cabinet.**
-
-
-<img src="./Ressources/CoffretInt.png">
-<img src="./Ressources/CoffretExt.png">
-
-When I started the VFD for the first time I had several ElectroMagnetic Interferences (EMI).  
-The PLC network adaptors that I use nearby stop working,   
-A 1wire humidity sensor inside the house started to give wrong values.
-And a current measure system, also located 20m away, started to give wrong values as well.  
-So I ordered and installed an EMI filter, it is the stainless steel box located just above the VFD.  
-It worked perfectly, no more problem.   
-
-I decided to add a fan in the cabinet.  
-It isn't absolutely necessary but the cabinet is located on the west and the sun hit it in the afternoon.  
-In summer when it's more than 30°C outside, the internal VFD temperature can reach 50°C.  
-This is still ok for the VFD (maximum is 75°C in mfr doc).  
-With the fan I keep VFD temperature below 38°C.   
-The fan is PWM driven by the raspberry pi pico W and fan speed varies with VFD temperature.  
+  
 
 PICO BOARD    
 
