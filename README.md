@@ -4,17 +4,17 @@
 # Contents  
 
 1. [Introduction](./README.md#1-introduction)   
- 1.1 [Why a VFD](./README.md#11-why-a-vfd)   
- 1.2 [VFD overview](./README.md#12-vfd-overview)    
- 1.3 [Project overview](./README.md#13-project-overview)  
- 1.4 [Project architecture](./README.md#14-project-architecture)  
- 1.5 [Documentation](./README.md#15-documentation)   
+    1.1 [Why a VFD](./README.md#11-why-a-vfd)   
+    1.2 [VFD overview](./README.md#12-vfd-overview)    
+    1.3 [Project overview](./README.md#13-project-overview)  
+    1.4 [Project architecture](./README.md#14-project-architecture)  
+    1.5 [Documentation](./README.md#15-documentation)   
 2. [Hardware](./README.md#2-hardware)   
- 2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
-   2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
-   2.1.2 [VFD settings](./README.md#212-vfd-settings)   
- 2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
- 2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
+    2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
+        2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
+        2.1.2 [VFD settings](./README.md#212-vfd-settings)   
+    2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
+    2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
 # TEST TESTS   
