@@ -120,6 +120,14 @@ So I have start/stop + Frequency setting via modbus in normal operation: remote 
 If I press M/F key then it goes to local (loc/rem LED off) then I have start/stop + F (knob) from operation panel  
 Press M/F again to return to remote mode  
 
+A few words about **Modbus and RS485:**
+I used a USB to RS485 adaptor on the host computer to connect to the VFD.  
+I had many adaptor disconnections because I had connected A to A, B to B, and GND to GND  
+When I disconnect the GND no more disconnection (it make sense because it's a differential bus. Searching the web also confirmed that. Many advices suggest not to connect GND).  
+I also put a 120 ohms resistors at each end as recommended + a shielded cable.  
+The connection is very robust now, no error, even at 115200 bauds.  
+
+To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected pico UART1. 
 
 ## 2.2 Microcontroller Raspberry Pi Pico W  
 
@@ -129,37 +137,6 @@ blabla..
 
 blabla..  
 
-
-
-
-
-
-
-The control system (the Raspberry pi Pico) is not yet installed on site. It is still under development. 
-The software is almost ready. Check the MicroPython folder to see it.
-
-The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected.    
-I have now connected it to a raspberry pi pico using microPython. It works  as expected.    
-
-For Linux check folder SoftLinux.   
-For MicroPython check folder MicroPython.   
-
-## Changes, tricks, setting I did:   
-
-
-
-**RS485 link:**  
-I used a USB to RS485 adaptor on the host computer to connect to the VFD.  
-I had many adaptor disconnections because I had connected A to A, B to B, and GND to GND  
-When I disconnect the GND no more disconnection (it make sense because it's a differential bus. Searching the web also confirmed that. Many advices suggest not to connect GND).  
-I also put a 120 ohms resistors at each end as recommended + a shielded cable.  
-The connection is very robust now, no error, even at 115200 bauds.  
-
-To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected pico UART1. 
-
-
-
-  
 
 PICO BOARD    
 
