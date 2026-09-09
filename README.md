@@ -15,7 +15,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.2 [VFD settings](./README.md#212-vfd-settings)   
     2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.1 [Pico Hardware](./README.md#221-pico-hardware)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software (MicropPython)](./README.md#222-pico-software)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software](./README.md#222-pico-software)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
@@ -147,7 +147,7 @@ The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the ha
 ### 2.2.2 Pico Software (MicroPython)
 
 blabla..  
-
+to come
 
 ## 2.3 Supervisor Raspberry Pi 4  
 
