@@ -11,8 +11,8 @@
     1.5 [Documentation](./README.md#15-documentation)   
 2. [Hardware](./README.md#2-hardware)   
     2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
-        2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
-        2.1.2 [VFD settings](./README.md#212-vfd-settings)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.2 [VFD settings](./README.md#212-vfd-settings)   
     2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
