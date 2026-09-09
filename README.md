@@ -11,6 +11,8 @@
  1.5 [Documentation](./README.md#15-documentation)   
 2. [Hardware](./README.md#2-hardware)   
  2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
+  2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
+  2.1.2 [VFD settings](./README.md#212-vfd-settings)   
  2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
  2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
@@ -68,6 +70,8 @@ A copy of this doc + the Modbus documentation is on this repository in the Docum
 
 ## 2.1 Electrical cabinet  
 
+### 2.1.1 Cabinet components
+
 **Here are photos of the VFD in its cabinet.**
 
 
@@ -76,50 +80,26 @@ A copy of this doc + the Modbus documentation is on this repository in the Docum
 
 The cabinet [single line diagram](./Hardware/SchemaElectrique.pdf) is available in the hardware folder.  
 
-Downstream the main breaker there are 4 feeders, 2 are spares, 1 for the 5V/3A Pico power supply and one contactor for the VFD.  
+Downstream the main breaker there are 4 feeders: 1 for the 5V/3A Pico power supply, 1 contactor for the VFD and 2 spares.  
 Even if the VFD can remain always energized, I choosed to feed it by a contactor so I can switch it off when it isn't needed.  
 Even if the VFD includes a motor protection I have added a motor circuit breaker after the VFD.  
-The VFD and the pump motor can be operated in full manual mode, without the Pico, from the cabinet push buttons.  
-
-When I started the VFD for the first time I had several ElectroMagnetic Interferences (EMI).  
-The PLC network adaptors that I use nearby stop working,   
-A 1wire humidity sensor inside the house started to give wrong values.
-And a current measure system, also located 20m away, started to give wrong values as well.  
-So I ordered and installed an EMI filter, it is the stainless steel box located just above the VFD.  
-It works perfectly, no more problem.   
+The VFD and the pump motor can be operated in full manual mode, without the Pico, from the cabinet push buttons. 
+ 
+When starting up the VFD, I observed significant electromagnetic interferences (EMI).
+Equipment located several tens of meters away—which had previously worked fine—began reporting faults;
+this included a humidity probe, a current sensor, and power-line communication (PLC) adapters.
+I had to install a filter—the small stainless steel box located above the VFD.
+This filter works perfectly, preventing EMI from feeding back into the electrical mains.
+However, interference persists in the immediate vicinity, such as on the 1-Wire bus (see below).
 
 I decided to add a fan in the cabinet.  
 It isn't absolutely necessary but the cabinet is located on the west and the sun hit it in the afternoon.  
 In summer when it's more than 30°C outside, the internal VFD temperature can reach 50°C.  
 This is still ok for the VFD (maximum is 75°C in mfr doc).  
 With the fan I keep VFD temperature below 38°C.   
-The fan is PWM driven by the raspberry pi pico W and fan speed varies with VFD temperature.
+The fan is PWM driven by the raspberry pi pico W and fan speed varies with VFD temperature.   
 
-## 2.2 Microcontroller Raspberry Pi Pico W  
-
-blabla..  
-
-## 2.3 Supervisor Raspberry Pi 4  
-
-blabla..  
-
-
-
-
-
-
-The VFD is now installed in its cabinet and is running. It drives the swimming pool water pump. It's working as expected.  
-
-The control system (the Raspberry pi Pico) is not yet installed on site. It is still under development. 
-The software is almost ready. Check the MicroPython folder to see it.
-
-The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected.    
-I have now connected it to a raspberry pi pico using microPython. It works  as expected.    
-
-For Linux check folder SoftLinux.   
-For MicroPython check folder MicroPython.   
-
-## Changes, tricks, setting I did:   
+### 2.1.2 VFD Settings
 
 Parameters changes:  
 I set **P1-00=4** to get single-phase motor mode 2 = high-speed. It was set to 3   
@@ -139,6 +119,34 @@ And finally these settings:
 So I have start/stop + Frequency setting via modbus in normal operation: remote (loc/rem LED blinking)  
 If I press M/F key then it goes to local (loc/rem LED off) then I have start/stop + F (knob) from operation panel  
 Press M/F again to return to remote mode  
+
+
+## 2.2 Microcontroller Raspberry Pi Pico W  
+
+blabla..  
+
+## 2.3 Supervisor Raspberry Pi 4  
+
+blabla..  
+
+
+
+
+
+
+
+The control system (the Raspberry pi Pico) is not yet installed on site. It is still under development. 
+The software is almost ready. Check the MicroPython folder to see it.
+
+The VFD supports ModBus. I have tested it with a RS485 connection to a Linux computer. It works  as expected.    
+I have now connected it to a raspberry pi pico using microPython. It works  as expected.    
+
+For Linux check folder SoftLinux.   
+For MicroPython check folder MicroPython.   
+
+## Changes, tricks, setting I did:   
+
+
 
 **RS485 link:**  
 I used a USB to RS485 adaptor on the host computer to connect to the VFD.  
