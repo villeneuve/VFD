@@ -144,7 +144,10 @@ The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the ha
 <img src="./Ressources/PicoBox.png">
 
 
-### 2.2.2 Pico Software (MicoPython)
+### 2.2.2 Pico Software
+
+blabla..  
+
 
 ## 2.3 Supervisor Raspberry Pi 4  
 
