@@ -15,7 +15,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.2 [VFD settings](./README.md#212-vfd-settings)   
     2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.1 [Pico Hardware](./README.md#221-pico-hardware)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software (MicroPython)](./README.md#222-pico-software)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software](./README.md#222-pico-software)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
@@ -135,10 +135,6 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 
 ### 2.2.1 Pico Hardware
 
-
-
-### 2.2.2 Pico Software (MicoPython)
-
 The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the hardware folder. 
 
 **Here is a photo of the Pico W and accessories.**
@@ -146,6 +142,9 @@ The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the ha
 
 **Here is a photo of the box housing the Pico W with the LCD (3D printed case).**
 <img src="./Ressources/PicoBox.png">
+
+
+### 2.2.2 Pico Software (MicoPython)
 
 ## 2.3 Supervisor Raspberry Pi 4  
 
