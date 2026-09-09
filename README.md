@@ -14,6 +14,8 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.2 [VFD settings](./README.md#212-vfd-settings)   
     2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.1 [Pico Hardware](./README.md#221-pico-hardware)   
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software (MicroPython)](./README.md#222-pico-software)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
   
   
@@ -120,7 +122,7 @@ So I have start/stop + Frequency setting via modbus in normal operation: remote 
 If I press M/F key then it goes to local (loc/rem LED off) then I have start/stop + F (knob) from operation panel  
 Press M/F again to return to remote mode  
 
-A few words about **Modbus and RS485:**
+A few words about **Modbus and RS485:**  
 I used a USB to RS485 adaptor on the host computer to connect to the VFD.  
 I had many adaptor disconnections because I had connected A to A, B to B, and GND to GND  
 When I disconnect the GND no more disconnection (it make sense because it's a differential bus. Searching the web also confirmed that. Many advices suggest not to connect GND).  
@@ -131,7 +133,19 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 
 ## 2.2 Microcontroller Raspberry Pi Pico W  
 
-blabla..  
+### 2.2.1 Pico Hardware
+
+
+
+### 2.2.2 Pico Software (MicoPython)
+
+The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the hardware folder. 
+
+**Here is a photo of the Pico W and accessories.**
+<img src="./Ressources/PicoBoard.png">
+
+**Here is a photo of the box housing the Pico W with the LCD (3D printed case).**
+<img src="./Ressources/PicoBox.png">
 
 ## 2.3 Supervisor Raspberry Pi 4  
 
@@ -148,4 +162,10 @@ FAN
 
 SUPERVISION FUXA SCADA
 
+### **MAIN VIEW** (animated)
 <img src="./Ressources/SupervisionMainView.gif">
+    
+    
+    
+### **MEASURES VIEW**
+<img src="./Ressources/MeasuresView.png">
