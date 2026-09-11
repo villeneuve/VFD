@@ -171,3 +171,9 @@ SUPERVISION FUXA SCADA
     
 ### **MEASURES VIEW**
 <img src="./Ressources/MeasuresView.png">
+
+
+
+### **CHART VIEW**
+<img src="./Ressources/ChartView.png">
+
