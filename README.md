@@ -177,3 +177,7 @@ SUPERVISION FUXA SCADA
 ### **CHART VIEW**
 <img src="./Ressources/ChartView.png">
 
+
+
+### **SUPERVISION: Raspberry Pi 4 with touch display 2 running Fuxa**
+<img src="./Ressources/Pi4.png">
