@@ -144,8 +144,9 @@ The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the ha
 <img src="./Ressources/PicoBox.png">
 
 
-### 2.2.2 Pico Software (MicroPython)
+### 2.2.2 Pico Software
 
+MicroPython
 blabla..  
 to come
 
