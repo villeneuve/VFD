@@ -22,7 +22,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2.2 [Standalone softwares](./README.md#2222-standalone-softwares)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
 3. [Software](./README.md#3-software)   
-    3.1 [Pico Software](./README.md#31-pico-software)    
+    3.1 [Pico Softwares](./README.md#31-pico-softwares)    
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.1 [Main softwares](./README.md#311-main-softwares)      
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.2 [Standalone softwares](./README.md#312-standalone-softwares)   
 
@@ -209,13 +209,13 @@ Raspberry pi OS Trixie
 ### **SUPERVISION: Raspberry Pi 4 with touch display 2 running Fuxa**
 <img src="./Ressources/Pi4.png">
 
-# 3. Software
+# 3. Softwares
 
 ## 3.1 Pico Softwares 
 
 All these softwares are in the [MicroPython folder](./MicroPython).    
 
-### 3.1.1 Main software
+### 3.1.1 Main softwares
 
 **main.py** runs at boot and call several other modules.
 It uses asyncio to run several tasks simultaneously :  
