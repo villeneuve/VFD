@@ -15,11 +15,7 @@
     2.1 [Electrical cabinet](./README.md#21-electrical-cabinet)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.1 [Cabinet main components](./README.md#211-cabinet-components)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.1.2 [VFD settings](./README.md#212-vfd-settings)   
-    2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.1 [Pico Hardware](./README.md#221-pico-hardware)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2 [Pico Software](./README.md#222-pico-software)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2.1 [Main software](./README.md#2221-main-software)   
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2.2 [Standalone software](./README.md#2222-standalone-software)   
+    2.2 [Microcontroller Pico W](./README.md#22-microcontroller-raspberry-pi-pico-w)    
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
 3. [Software](./README.md#3-software)   
     3.1 [Pico software](./README.md#31-pico-software)    
@@ -142,9 +138,11 @@ To connect to the Raspberry Pi Pico I used a serial to RS485 adaptor connected p
 
 ## 2.2 Microcontroller Raspberry Pi Pico W  
 
-### 2.2.1 Pico Hardware
 
-The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the hardware folder. 
+The Pico board [schematic](./Hardware/SchemaPicowVFD.pdf) is available in the hardware folder.     
+The board includes: the Pico W itself, a RS485 to serial converter, a one relay module, a Mosfet module,
+a DS18B20 temperature sensor, switches, diode, resistors, terminals, etc..
+The LCD (+ associated push buttons) is located on the front of the box housing the board.
 
 **Here is a photo of the Pico W and accessories.**
 <img src="./Ressources/PicoBoard.png">
