@@ -21,7 +21,7 @@
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2.1 [Main softwares](./README.md#2221-main-softwares)   
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2.2.2.2 [Standalone softwares](./README.md#2222-standalone-softwares)   
     2.3 [Supervisor Pi4](./README.md#23-supervisor-raspberry-pi-4)   
-3. [Software](./README.md#3-software)   
+3. [Softwares](./README.md#3-softwares)   
     3.1 [Pico Softwares](./README.md#31-pico-softwares)    
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.1 [Main softwares](./README.md#311-main-softwares)      
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.2 [Standalone softwares](./README.md#312-standalone-softwares)   
