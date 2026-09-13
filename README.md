@@ -215,14 +215,14 @@ Raspberry pi OS Trixie
 
 All these softwares are in the [MicroPython folder](./MicroPython).    
 
-### 3.1.1 Main softwares
+### 3.1.1 Main software
 
 **main.py** runs at boot and call several other modules.
 It uses asyncio to run several tasks simultaneously :  
  - Driving the vfd with **vfdObj.py**. It includes a bridge to allow ModBus commands from the Pi4 connected to the pico UART0.
  There is a lock to avoid collision between the 2 channels (REPL + UART0) sharing the UART1.  
  - Driving the lcd with **uselcd.py** (and a slighty modified version of lcd_Adafruit_16x2_RGB_i2c.py compared to the 
- one [here](../micropython-lcd-adafruit-16x2-rgb-i2c)).
+ one [here] [here](https://github.com/villeneuve/micropython-lcd-adafruit-16x2-rgb-i2c)).
   uselcd.py has a menu system to set the frequency, the date, the time, start/stop the motor and close/open the contactor)  
  - Runs **web_server.py**. When a push button is pressed starts the WiFi in access point, displays IP to connect at on the lcd, 
  and runs the web server showing vfd - motor - contactor status, actions possible: set the frequency, the date, the time, start/stop
