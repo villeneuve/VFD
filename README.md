@@ -202,15 +202,11 @@ This is the same as the vfd.py script + a bridge between UART0 and UART1. The VF
 A device can be connected on UART0 and can use ModBus to transparently dialog with the VFD. 
 At the same time the REPL (usually on USB but can be webrepl) can also dialog with the VFD. 
 There is a lock to avoid collision between the 2 channels (REPL + UART0) sharing the UART1.
-A Linux computer can use the 
-
-
-
-
-
-
-software in the SoftLinux folder of this repository to dialog with the VFD 
+A Linux computer can use the software in the SoftLinux folder of this repository to dialog with the VFD 
 simultaneously with the MicroPython software on the REPL.
+
+
+# TEMPORARY END -- remaining to come
 
 MicroPython
 blabla..  
