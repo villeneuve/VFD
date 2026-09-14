@@ -169,18 +169,22 @@ All these software are in the [MicroPython folder](./MicroPython).
 
 ### 3.1.1 Main software
 
-**main.py** runs at boot and call several other modules.
-It uses asyncio to run several tasks simultaneously :  
- - Driving the vfd with **vfdObj.py**. It includes a bridge to allow ModBus commands from the Pi4 connected to the pico UART0.
- There is a lock to avoid collision between the 2 channels (REPL + UART0) sharing the UART1.  
- - Driving the lcd with **uselcd.py** (and a slighty modified version of lcd_Adafruit_16x2_RGB_i2c.py compared to the 
+**main.py** runs at boot, call several other modules and launches 3 main asyncio tasks:  
+
+ - One task is only listening REPL (USB) for incoming commands.  
+ - One task is only taking care of the daily program: action when the time match a programmed action.  
+ - And the third task is doing everything:  
+    - Driving the vfd with **vfdObj.py**. Additionaly this module includes a bridge to allow direct passthrough ModBus commands from the Pi4 connected to the pico UART0.
+ There is a lock to avoid collision between the 2 channels (REPL + UART0) sharing the UART1. 
+ This bridge is a separate task running alone on core 1, all other tasks are running on core 0.  
+    - Driving the lcd with **uselcd.py** (and a slighty modified version of lcd_Adafruit_16x2_RGB_i2c.py compared to the 
  one [here] [here](https://github.com/villeneuve/micropython-lcd-adafruit-16x2-rgb-i2c)).
   uselcd.py has a menu system to set the frequency, the date, the time, start/stop the motor and close/open the contactor)  
- - Runs **web_server.py**. When a push button is pressed starts the WiFi in access point, displays IP to connect at on the lcd, 
- and runs the web server showing vfd - motor - contactor status, actions possible: set the frequency, the date, the time, start/stop
+    - Runs **web_server.py**. When a push button is pressed starts the WiFi in access point, displays IP to connect at on the lcd, 
+ and runs the web server showing vfd - motor - contactor status. Actions possible: set the frequency, the date, the time, start/stop
   motor and contactor, edit the daily program.  
- - Runs **read_sensors.py** and keeps sensors measured values in a list that is periodically printed on the REPL then catched by the Pi4.   
- 
+    - Runs **read_sensors.py** and records sensors measured values and errors in a list.   
+    - Print every 20 second on the REPL all data from VFD and sensors in a Python list format. This list is read by Pi4 to update the supervision.  
 
 ### 3.1.2 Standalone software
 
