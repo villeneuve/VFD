@@ -21,7 +21,10 @@
     3.1 [Pico software](./README.md#31-pico-software)    
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.1 [Main software](./README.md#311-main-software)      
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.1.2 [Standalone software](./README.md#312-standalone-software)   
-
+    3.2 [Linux software](./README.md#32-linux-software)    
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.1 [Main software](./README.md#321-main-software)      
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3.2.2 [Standalone software](./README.md#322-standalone-software)   
+4. [Supervision](./README.md#4-supervision)  
 
 
 # TEST TESTS   
@@ -209,6 +212,23 @@ There is a lock to avoid collision between the 2 channels (REPL + UART0) sharing
 A Linux computer can use the software in the SoftLinux folder of this repository to dialog with the VFD 
 simultaneously with the MicroPython software on the REPL.
 
+
+## 3.2 Linux software 
+
+All these software are in the [SoftLinux folder](./SoftLinux). They are running on the Raspberry Pi 4.    
+
+### 3.2.1 Main software
+
+blabla
+
+### 3.2.2 Standalone software
+
+Standalone software are Python scripts that aren't used on the final project.  
+They have been written during the project development mainly for tests. They can be useful for other tasks.
+They run on a Linux machine (a PC or a Raspberry Pi) and dialog with the VFD.
+
+
+# 4. Supervision
 
 # TEMPORARY END -- remaining to come
 
