@@ -219,7 +219,21 @@ All these software are in the [SoftLinux folder](./SoftLinux). They are running 
 
 ### 3.2.1 Main software
 
-blabla
+On the Linux machine, the Raspberry Pi 4, we launch at boot (by the systemd unit **vfd-ctrl.service**) the script 
+**ctrl_cde_sock.py**   
+This script opens the serial port connected to the Pico REPL, and reads all the data received from the Pico, 
+including the Python list containing the measures and the VFD data.
+Then it sends this data to the systemd logging system. 
+Additionally this script open a network socket on port 12345 and listen to it. 
+This socket is the entry point for commands to transfer to Pico, anything received is transmitted to the Pico REPL. 
+The Pico is responsible for checking if the command is valid and processing it.
+
+
+Another process is launched at boot by the systemd unit **mqtt-vfd-publisher.service** it is **mqtt_vfd_publisher.py**  
+This one gets the Python list containing the measures and the VFD data (from systemd logs via journalctl) 
+,puts it in json format and publishes it by mqtt (mosquitto is installed and the Pi 4 is the broker).
+So the data is available to any mqtt subscriber of this topic on the network including the Pi4 supervision software.  
+
 
 ### 3.2.2 Standalone software
 
@@ -229,14 +243,6 @@ They run on a Linux machine (a PC or a Raspberry Pi) and dialog with the VFD.
 
 
 # 4. Supervision
-
-# TEMPORARY END -- remaining to come
-
-MicroPython
-blabla..  
-to come
-
-
 
 
 ### **MAIN VIEW** (animated)
@@ -253,5 +259,6 @@ to come
 <img src="./Ressources/ChartView.png">
 
 
+# TEMPORARY END -- remaining to come
 
 
