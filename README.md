@@ -27,11 +27,6 @@
 4. [Supervision](./README.md#4-supervision)  
 
 
-# TEST TESTS   
-# UNDER WORKS  
-  
-
-
 # 1. Introduction   
 
 This page describes the installation of a VFD (Variable Frequency Drive) on a swimming pool pump and its control system.  
@@ -244,6 +239,12 @@ They are all the scripts in the [SoftLinux folder](./SoftLinux) other than the o
 
 # 4. Supervision
 
+The SCADA software used to manage the supervision is [FUXA](https://frangoteam.org/)  
+The headless portable binary version is used and perfectly runs on the Pi4 with the touchscreen.   
+It's configured to subscribe to the MQTT topic to get the JSON data.    
+Then with this data it animates 3 views (screeshots hereunder).  
+From these views it's possible to start/stop the VFD, the motor, change the frequency etc..  
+
 
 ### **MAIN VIEW** (animated)
 <img src="./Ressources/SupervisionMainView.gif">
@@ -258,7 +259,5 @@ They are all the scripts in the [SoftLinux folder](./SoftLinux) other than the o
 ### **CHART VIEW**
 <img src="./Ressources/ChartView.png">
 
-
-# TEMPORARY END -- remaining to come
 
 
