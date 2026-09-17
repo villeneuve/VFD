@@ -242,7 +242,7 @@ They are all the scripts in the [SoftLinux folder](./SoftLinux) other than the o
 The SCADA software used to manage the supervision is [FUXA](https://frangoteam.org/)  
 The headless portable binary version is used and perfectly runs on the Pi4 with the touchscreen.   
 It's configured to subscribe to the MQTT topic to get the JSON data.    
-Then with this data it animates 3 views (screeshots hereunder).  
+Then with this data it animates 3 views (screenshots hereunder).  
 From these views it's possible to start/stop the VFD, the motor, change the frequency etc..  
 
 
