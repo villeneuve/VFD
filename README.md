@@ -58,7 +58,7 @@ Furthermore the Pico is able to run even if the supervisor is out of order.
 A LCD screen and push buttons permit to drive the pump.
 And finally the supervisor is connected to the home network but the Scada can run and drive the VFD even without network.
 
-The Pico W WiFi is always off and can be switched on by a push button, it is then possible to drive the system from a web page.  
+The Pico W WiFi is always off and can be switched on by a push button, it is then possible to drive the system from a web page on a wifi connected device.  
 
 Driving the system from the supervisor, the LCD, WiFi or even from other devices on the network includes: start/stop the pump, open/close the contactor to energize the VFD, set the frequency (the pump speed), define the pump daily program, and other utility tasks.
  
